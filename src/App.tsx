@@ -67,25 +67,35 @@ const roleLabels: Record<Role, string> = { student: "Mahasiswa", staff: "Petugas
 function Login({ onLogin }: { onLogin: (role: Role, email: string) => void }) {
   const [errorMsg, setErrorMsg] = useState("");
 
-const handleGoogleSuccess = async (credentialResponse: any) => {
-    try {
-      setErrorMsg("");
-      const res = await fetch('https://perkap-backend.vercel.app/api/auth/google', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: credentialResponse.credential }) // Kembalikan ke 'token'
-      });
-      const data = await res.json();
-      
-      if (res.ok && data.success) {
-        onLogin(data.role, data.email);
-      } else {
-        setErrorMsg(data.message || "Login gagal. Gunakan email kampus.");
+  const login = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        setErrorMsg("");
+        // Ambil profil user langsung menggunakan token akses Google secara aman
+        const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+        });
+        const userInfo = await userInfoRes.json();
+
+        // Kirim email dan nama user langsung ke backend
+        const res = await fetch('https://perkap-backend.vercel.app/api/auth/google', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: tokenResponse.access_token, email: userInfo.email, name: userInfo.name })
+        });
+        const data = await res.json();
+        
+        if (res.ok && data.success) {
+          onLogin(data.role, data.email);
+        } else {
+          setErrorMsg(data.message || "Login gagal. Gunakan email kampus.");
+        }
+      } catch (err) {
+        setErrorMsg("Gagal terhubung ke server backend.");
       }
-    } catch (err) {
-      setErrorMsg("Gagal terhubung ke server backend.");
-    }
-  };
+    },
+    onError: () => setErrorMsg('Otentikasi Google gagal.'),
+  });
 
   return (
     <main className="login">
@@ -108,13 +118,26 @@ const handleGoogleSuccess = async (credentialResponse: any) => {
         {errorMsg && <div style={{ background: '#ffe6e6', color: '#d9534f', padding: '10px', borderRadius: '8px', fontSize: '0.9rem', marginBottom: '1rem', textAlign: 'center' }}>{errorMsg}</div>}
 
         <div style={{ display: 'flex', justifyContent: 'center', margin: '1.5rem 0', width: '100%' }}>
-          <GoogleLogin
-            onSuccess={handleGoogleSuccess}
-            onError={() => setErrorMsg('Otentikasi Google gagal.')}
-            shape="pill" 
-            width="100%"
-            use_fedcm_for_prompt={false}
-          />
+          <button 
+            onClick={() => login()} 
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              gap: '10px', 
+              background: '#ffffff', 
+              color: '#3c4043', 
+              border: '1px solid #dadce0', 
+              padding: '12px 24px', 
+              borderRadius: '24px', 
+              fontWeight: '500', 
+              cursor: 'pointer', 
+              width: '100%', 
+              boxShadow: '0 1px 3px rgba(0,0,0,0.1)' 
+            }}
+          >
+            <span>Masuk dengan Google Kampus</span>
+          </button>
         </div>
 
         <p className="login__help"><Icon name="help" size={16} /> Butuh bantuan? Hubungi <b>PERKAP UNIKA</b></p>
