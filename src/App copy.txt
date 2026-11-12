@@ -1,0 +1,574 @@
+import { FormEvent, ReactNode, useEffect, useState } from "react";
+
+type Role = "student" | "staff" | "admin";
+type IconName =
+  | "arrow"
+  | "bell"
+  | "book"
+  | "box"
+  | "calendar"
+  | "chart"
+  | "check"
+  | "chevron"
+  | "clock"
+  | "close"
+  | "document"
+  | "download"
+  | "grid"
+  | "help"
+  | "history"
+  | "home"
+  | "logout"
+  | "mail"
+  | "menu"
+  | "more"
+  | "plus"
+  | "printer"
+  | "scan"
+  | "search"
+  | "settings"
+  | "shield"
+  | "upload"
+  | "users";
+
+const iconPaths: Record<IconName, ReactNode> = {
+  arrow: <><path d="M5 12h14M13 6l6 6-6 6" /></>,
+  bell: <><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></>,
+  book: <><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V4H6.5A2.5 2.5 0 0 0 4 6.5v13Z" /><path d="M8 7h8M8 11h6" /></>,
+  box: <><path d="m21 8-9 5-9-5 9-5 9 5Z" /><path d="m3 8 9 5 9-5v8l-9 5-9-5V8ZM12 13v8" /></>,
+  calendar: <><path d="M3 5h18v16H3V5ZM16 3v4M8 3v4M3 10h18" /></>,
+  chart: <><path d="M4 19V9M10 19V5M16 19v-7M22 19H2" /></>,
+  check: <><path d="m5 12 4 4L19 6" /></>,
+  chevron: <><path d="m9 18 6-6-6-6" /></>,
+  clock: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>,
+  close: <><path d="M6 6l12 12M18 6 6 18" /></>,
+  document: <><path d="M6 2h8l4 4v16H6V2Z" /><path d="M14 2v5h4M9 12h6M9 16h6" /></>,
+  download: <><path d="M12 3v12M7 10l5 5 5-5M4 21h16" /></>,
+  grid: <><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></>,
+  help: <><circle cx="12" cy="12" r="9" /><path d="M9.5 9a2.6 2.6 0 1 1 3.4 2.5c-.9.35-.9 1.5-.9 1.5M12 17h.01" /></>,
+  history: <><path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5M12 7v5l3 2" /></>,
+  home: <><path d="m3 11 9-8 9 8M5 10v11h14V10M9 21v-7h6v7" /></>,
+  logout: <><path d="M10 4H4v16h6M14 8l4 4-4 4M8 12h10" /></>,
+  mail: <><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></>,
+  menu: <><path d="M4 7h16M4 12h16M4 17h16" /></>,
+  more: <><circle cx="5" cy="12" r="1" /><circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /></>,
+  plus: <><path d="M12 5v14M5 12h14" /></>,
+  printer: <><path d="M7 9V3h10v6M7 18H4V9h16v9h-3M7 14h10v7H7v-7Z" /></>,
+  scan: <><path d="M4 8V4h4M16 4h4v4M20 16v4h-4M8 20H4v-4M7 12h10M9 9v6M15 9v6" /></>,
+  search: <><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></>,
+  settings: <><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z" /></>,
+  shield: <><path d="M12 3 4 6v5c0 5 3.4 8.5 8 10 4.6-1.5 8-5 8-10V6l-8-3Z" /><path d="m9 12 2 2 4-4" /></>,
+  upload: <><path d="M12 16V4M7 9l5-5 5 5M4 20h16" /></>,
+  users: <><circle cx="9" cy="8" r="4" /><path d="M2 21v-2a6 6 0 0 1 12 0v2M16 4a4 4 0 0 1 0 8M17 15a6 6 0 0 1 5 6" /></>,
+};
+
+function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
+  return <svg className="icon" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{iconPaths[name]}</svg>;
+}
+
+function Logo({ compact = false }: { compact?: boolean }) {
+  return (
+    <div className={`brand ${compact ? "brand--compact" : ""}`}>
+      <div className="brand__mark"><span>U</span></div>
+      {!compact && <div><strong>PERKAP UNIKA</strong><small>Soegijapranata</small></div>}
+    </div>
+  );
+}
+
+type ButtonProps = {
+  children: ReactNode; variant?: "primary" | "secondary" | "danger" | "warning" | "ghost";
+  icon?: IconName; onClick?: () => void; type?: "button" | "submit"; className?: string; disabled?: boolean;
+};
+
+function Button(props: ButtonProps) {
+  const { children, variant = "primary", icon, onClick, type = "button", className = "" } = props;
+  return <button type={type} className={`btn btn--${variant} ${className}`} onClick={onClick} disabled={props.disabled ?? false}>{icon && <Icon name={icon} size={17} />}<span>{children}</span></button>;
+}
+
+function Field({ label, placeholder, type = "text", icon, value, onChange }: { label: string; placeholder: string; type?: string; icon?: IconName; value?: string; onChange?: (value: string) => void }) {
+  return <label className="field"><span>{label}</span><div className="field__control">{icon && <Icon name={icon} size={18} />}<input type={type} placeholder={placeholder} value={value} onChange={onChange ? (event) => onChange(event.target.value) : undefined} /></div></label>;
+}
+
+const roleLabels: Record<Role, string> = { student: "Mahasiswa", staff: "Petugas Perkap", admin: "Super Admin" };
+
+function Login({ onLogin }: { onLogin: (role: Role) => void }) {
+  const [identity, setIdentity] = useState("");
+  const [password, setPassword] = useState("");
+
+  const submit = (event: FormEvent) => { 
+    event.preventDefault(); 
+    // Deteksi role otomatis berdasarkan input email/NIM (atau default ke student jika tidak cocok)
+    const lowerIdentity = identity.toLowerCase();
+    let detectedRole: Role = "student";
+    if (lowerIdentity.includes("admin")) {
+      detectedRole = "admin";
+    } else if (lowerIdentity.includes("petugas") || lowerIdentity.includes("staff")) {
+      detectedRole = "staff";
+    }
+    onLogin(detectedRole); 
+  };
+
+  return (
+    <main className="login">
+      <div className="login__orb login__orb--one" />
+      <div className="login__orb login__orb--two" />
+      <section className="login__intro">
+        <div className="login__university">UNIVERSITAS KATOLIK</div>
+        <h1>Logistik kampus,<br /><em>lebih tertata.</em></h1>
+        <p>Satu pintu untuk peminjaman alat, perlengkapan, dan logistik kegiatan kampus.</p>
+        <div className="login__stats"><div><strong>24/7</strong><span>Akses portal</span></div><div><strong>120+</strong><span>Unit peralatan</span></div><div><strong>4.9</strong><span>Rating layanan</span></div></div>
+      </section>
+      <form className="login__card" onSubmit={submit}>
+        <Logo />
+        <div className="login__heading"><span>Selamat datang kembali</span><h2>Sistem Peminjaman Alat Perkap - Unika Soegijapranata</h2><p>Masuk menggunakan akun UNIKA Anda.</p></div>
+        
+        <Field label="NIM / NIP / Email" placeholder="Masukkan akun UNIKA" icon="users" value={identity} onChange={setIdentity} />
+        <Field label="Kata sandi" placeholder="Masukkan kata sandi" type="password" icon="shield" value={password} onChange={setPassword} />
+        
+        <div className="login__options"><label><input type="checkbox" /> Ingat saya</label><button type="button" onClick={() => { window.location.href = "mailto:helpdesk@unika.ac.id?subject=Reset Kata Sandi Portal Perkap"; }}>Lupa kata sandi?</button></div>
+        <Button type="submit" className="btn--wide" disabled={!identity.trim() || !password.trim()}>Masuk / Login <Icon name="arrow" size={17} /></Button>
+        <p className="login__help"><Icon name="help" size={16} /> Butuh bantuan? Hubungi <b>PERKAP UNIKA</b></p>
+      </form>
+      <div className="login__footer">© 2026 Universitas Katolik Soegijapranata · Semarang</div>
+    </main>
+  );
+}
+
+type NavItem = { id: string; label: string; icon: IconName };
+
+function Sidebar({ role, active, items, collapsed, onToggle, onSelect, onLogout }: {
+  role: Role; active: string; items: NavItem[]; collapsed: boolean; onToggle: () => void; onSelect: (id: string) => void; onLogout: () => void;
+}) {
+  return (
+    <aside className={`sidebar ${collapsed ? "sidebar--collapsed" : ""}`}>
+      <div className="sidebar__head"><Logo compact={collapsed} /><button className="icon-btn sidebar__toggle" onClick={onToggle} aria-label="Ciutkan menu"><Icon name={collapsed ? "chevron" : "menu"} /></button></div>
+      <nav className="sidebar__nav">
+        <span className="sidebar__label">MENU UTAMA</span>
+        {items.map((item) => <button key={item.id} className={active === item.id ? "active" : ""} onClick={() => onSelect(item.id)}><Icon name={item.icon} /><span>{item.label}</span>{active === item.id && <i />}</button>)}
+      </nav>
+      <div className="sidebar__profile"><div className="avatar">{role === "student" ? "AS" : role === "staff" ? "DP" : "SA"}</div><div><strong>{role === "student" ? "Aditya Saputra" : role === "staff" ? "Dina Pratiwi" : "System Admin"}</strong><span>{roleLabels[role]}</span></div><button onClick={onLogout} aria-label="Keluar"><Icon name="logout" size={18} /></button></div>
+    </aside>
+  );
+}
+
+function Header({ eyebrow, title, onMenu, onHelp, onNotification, initials }: { eyebrow: string; title: string; onMenu?: () => void; onHelp: () => void; onNotification: () => void; initials: string }) {
+  return <header className="topbar"><button className="icon-btn topbar__menu" onClick={onMenu} aria-label="Buka navigasi"><Icon name="menu" /></button><div><span>{eyebrow}</span><h1>{title}</h1></div><div className="topbar__actions"><button className="icon-btn" onClick={onHelp} aria-label="Bantuan"><Icon name="help" /></button><button className="icon-btn notification" onClick={onNotification} aria-label="Notifikasi"><Icon name="bell" /><i /></button><div className="avatar">{initials}</div></div></header>;
+}
+
+function Badge({ children, tone = "purple" }: { children: ReactNode; tone?: "purple" | "green" | "yellow" | "red" | "gray" | "blue" }) {
+  return <span className={`badge badge--${tone}`}>{children}</span>;
+}
+
+function StatusBadge({ children, tone }: { children: ReactNode; tone: "green" | "yellow" | "red" | "gray" | "blue" }) {
+  return <Badge tone={tone}><i className="status-dot" />{children}</Badge>;
+}
+
+const qrPattern = "11111110100111111111010000101010100001011011101000101110110111010111010111011011101010101110110100010101010001011111110101011111111000000010100000000010101110111101010110111001010110011101010111101011101010101001010111011011101101110100010100100010100001011111110110111111111010000101000100001011011101011101110110111010100101011101011101110101111010111011010001010011010001011111110101101111111";
+
+function QRCode({ label }: { label: string }) {
+  return <div className="qr-code" role="img" aria-label={`QR tiket ${label}`}>{qrPattern.padEnd(441, qrPattern).slice(0, 441).split("").map((cell, index) => <i key={index} className={cell === "1" ? "filled" : ""} />)}</div>;
+}
+
+const services = [
+  { title: "Proyektor Epson EB-X06", category: "Multimedia", icon: "box" as IconName, desc: "Proyektor 3LCD untuk presentasi kelas, seminar, dan kegiatan kampus.", total: 5, available: 3, time: "Maks. 3 hari", tone: "lavender", serials: ["EPS-001", "EPS-002", "EPS-003", "EPS-004", "EPS-005"] },
+  { title: "Sound System Portable", category: "Audio", icon: "bell" as IconName, desc: "Paket speaker aktif, mixer, dan dua mikrofon wireless.", total: 4, available: 2, time: "Maks. 2 hari", tone: "blue", serials: ["SND-001", "SND-002", "SND-003", "SND-004"] },
+  { title: "Tenda Lipat 3×3 Meter", category: "Logistik Acara", icon: "home" as IconName, desc: "Tenda lipat tahan air untuk kegiatan luar ruang di area kampus.", total: 8, available: 6, time: "Maks. 3 hari", tone: "gold", serials: ["TND-001", "TND-002", "TND-003", "TND-004", "TND-005", "TND-006", "TND-007", "TND-008"] },
+  { title: "Kamera Mirrorless Sony", category: "Dokumentasi", icon: "calendar" as IconName, desc: "Kamera dokumentasi lengkap dengan baterai dan kartu memori.", total: 3, available: 1, time: "Maks. 2 hari", tone: "green", serials: ["CAM-001", "CAM-002", "CAM-003"] },
+  { title: "Meja Lipat Acara", category: "Logistik Acara", icon: "grid" as IconName, desc: "Meja lipat portabel untuk registrasi dan kebutuhan acara.", total: 12, available: 9, time: "Maks. 3 hari", tone: "pink", serials: ["MJA-001", "MJA-002", "MJA-003"] },
+  { title: "Kabel Roll 25 Meter", category: "Kelistrikan", icon: "settings" as IconName, desc: "Kabel ekstensi berpelindung untuk distribusi daya kegiatan.", total: 10, available: 0, time: "Maks. 2 hari", tone: "gray", serials: ["KBL-001", "KBL-002", "KBL-003"] },
+];
+
+function downloadText(filename: string, content: string) {
+  const url = URL.createObjectURL(new Blob([content], { type: "text/plain" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function StudentCatalog({ onApply, stockLevels = {} }: { onApply: (service: string) => void; stockLevels?: Record<string, number> }) {
+  const [category, setCategory] = useState("Semua");
+  const [query, setQuery] = useState("");
+  const categories = ["Semua", "Multimedia", "Audio", "Logistik Acara", "Dokumentasi", "Kelistrikan"];
+  const visible = services.filter((service) => (category === "Semua" || service.category === category) && service.title.toLowerCase().includes(query.toLowerCase()));
+  return <>
+    <div className="hero"><div><Badge tone="yellow">PERKAP UNIKA · LIVE INVENTORY</Badge><h2>Pinjam alat kampus tanpa proses rumit</h2><p>Cek stok fisik, ajukan peminjaman, dan pantau pengembalian dalam satu portal.</p></div><div className="hero__art"><Icon name="box" size={52} /></div></div>
+    <div className="section-head"><div><h2>Katalog alat & perlengkapan</h2><p>Stok diperbarui berdasarkan unit fisik yang tersedia.</p></div></div>
+    <div className="catalog-tools"><label className="search"><Icon name="search" size={18} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Cari proyektor, sound system, tenda..." /></label><div className="filter-pills">{categories.map((item) => <button className={category === item ? "active" : ""} onClick={() => setCategory(item)} key={item}>{item}</button>)}</div></div>
+    <div className="service-grid">{visible.map((service) => { const available = stockLevels[service.title] ?? service.available; return <article className="service-card" key={service.title}><div className="service-card__top"><div className={`service-icon service-icon--${service.tone}`}><Icon name={service.icon} /></div><Badge tone={available === 0 ? "red" : available <= 2 ? "yellow" : "green"}>Tersedia: {available}/{service.total}</Badge></div><span className="service-card__category">{service.category}</span><h3>{service.title}</h3><p>{service.desc}</p><div className="service-card__meta"><Icon name="clock" size={16} /><span>{service.time}</span></div><Button variant="secondary" icon="plus" disabled={available === 0} onClick={() => onApply(service.title)}>{available === 0 ? "Stok habis" : "Pinjam / Ajukan"}</Button></article>; })}</div>
+    {!visible.length && <section className="empty-state"><Icon name="search" size={30} /><h3>Layanan tidak ditemukan</h3><p>Coba kata kunci atau kategori lain.</p><Button variant="secondary" onClick={() => { setQuery(""); setCategory("Semua"); }}>Reset pencarian</Button></section>}
+  </>;
+}
+
+function StudentRequestForm({ service, onBack, onSubmit }: { service: string; onBack: () => void; onSubmit: () => void }) {
+  const [file, setFile] = useState<File | null>(null);
+  const [error, setError] = useState("");
+  const [showCalendar, setShowCalendar] = useState(false);
+  const item = services.find((entry) => entry.title === service) ?? services[0];
+  const validateFile = (selected?: File) => {
+    if (!selected) return;
+    if (selected.type !== "application/pdf" || !selected.name.toLowerCase().endsWith(".pdf")) {
+      setFile(null);
+      setError("Format tidak didukung. Surat Permohonan Peminjaman wajib berupa PDF (.pdf).");
+      return;
+    }
+    if (selected.size > 5 * 1024 * 1024) {
+      setFile(null);
+      setError("Ukuran file melebihi batas maksimum 5 MB.");
+      return;
+    }
+    setFile(selected);
+    setError("");
+  };
+  return <>
+    <div className="backline"><button onClick={onBack}><Icon name="arrow" size={17} /> Kembali ke katalog</button><Badge tone="purple">FORMULIR PEMINJAMAN</Badge></div>
+    <div className="request-layout"><section className="panel request-form">
+      <div className="request-form__heading"><div className="service-icon service-icon--lavender"><Icon name="box" /></div><div><span>{item.category}</span><h2>{service}</h2><p>Ajukan unit fisik yang tersedia untuk kegiatan kampus.</p></div></div>
+      <div className="form-grid"><Field label="Nama peminjam" placeholder="Aditya Saputra" /><Field label="NIM / NIP" placeholder="22.G1.0087" /></div>
+      <div className="form-grid"><Field label="Tanggal pinjam" placeholder="18 Maret 2026" /><Field label="Tanggal kembali" placeholder="20 Maret 2026" /></div>
+      <label className="field"><span>Keperluan peminjaman</span><textarea placeholder="Jelaskan kegiatan dan lokasi penggunaan" defaultValue="Seminar mahasiswa di Gedung Thomas Aquinas" /></label>
+      <div className="upload-section"><div className="upload-section__title"><div><h3>Unggah Surat Permohonan</h3><p>Surat permohonan peminjaman alat wajib untuk validasi Petugas Perkap.</p></div><Badge tone="red">Wajib</Badge></div>
+        <label className={`upload-box upload-box--large ${error ? "upload-box--error" : ""} ${file ? "upload-box--success" : ""}`} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); validateFile(event.dataTransfer.files[0]); }}>
+          <input type="file" accept=".pdf,application/pdf" onChange={(event) => validateFile(event.target.files?.[0])} />
+          <div className="upload-box__icon"><Icon name={file ? "check" : "upload"} size={24} /></div><strong>{file ? file.name : "Unggah Surat Permohonan"}</strong>
+          <span>{file ? `${(file.size / 1024 / 1024).toFixed(2)} MB · Siap dikirim` : "Tarik dan lepas file ke area ini"}</span><span className="file-rule"><b>Hanya PDF (.pdf)</b><i />Maksimum 5 MB</span><span className="file-picker">{file ? "Ganti file PDF" : "Pilih file PDF"}</span>
+        </label>{error && <p className="upload-error"><Icon name="close" size={15} /> {error}</p>}
+      </div>
+      <div className="request-form__actions"><Button variant="secondary" onClick={onBack}>Batalkan</Button><Button icon="arrow" disabled={!file} onClick={onSubmit}>Kirim Pengajuan Peminjaman</Button></div>
+    </section><aside className="request-summary"><h3>Ringkasan unit</h3><dl><div><dt>Stok fisik</dt><dd><Badge tone="green">{item.available}/{item.total} tersedia</Badge></dd></div><div><dt>Jadwal reservasi</dt><dd><Badge tone="green">Tidak bentrok</Badge></dd></div><div><dt>Kelayakan akun</dt><dd><Badge tone="green">Tidak ada overdue</Badge></dd></div><div><dt>Durasi maksimal</dt><dd>{item.time}</dd></div><div><dt>Pengambilan</dt><dd>Gudang Perkap</dd></div></dl><Button variant="secondary" icon="calendar" onClick={() => setShowCalendar(true)}>Lihat kalender ketersediaan</Button><div className="request-summary__help"><Icon name="shield" /><div><strong>Tanggung jawab peminjam</strong><p>Periksa kondisi dan serial unit saat serah terima.</p></div></div></aside></div>
+    {showCalendar && <AvailabilityCalendarModal service={service} onClose={() => setShowCalendar(false)} />}
+  </>;
+}
+
+function AvailabilityCalendarModal({ service, onClose }: { service: string; onClose: () => void }) {
+  const [month, setMonth] = useState(new Date(2026, 2, 1));
+  const item = services.find((entry) => entry.title === service) ?? services[0];
+  const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+  const weekdays = ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"];
+  const year = month.getFullYear();
+  const monthIndex = month.getMonth();
+  const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+  const firstDay = (new Date(year, monthIndex, 1).getDay() + 6) % 7;
+  const cells = Array.from({ length: 42 }, (_, index) => {
+    const day = index - firstDay + 1;
+    if (day < 1 || day > daysInMonth) return null;
+    const selected = year === 2026 && monthIndex === 2 && day >= 18 && day <= 20;
+    const unavailable = item.available === 0 || (!selected && (day % 9 === 0 || day % 13 === 0));
+    const limited = !selected && !unavailable && (day % 5 === 0 || day % 7 === 0);
+    return { day, selected, unavailable, limited };
+  });
+  const moveMonth = (offset: number) => setMonth(new Date(year, monthIndex + offset, 1));
+  return <div className="modal-backdrop" role="presentation"><section className="modal availability-modal" role="dialog" aria-modal="true" aria-labelledby="availability-title">
+    <div className="modal__head"><div className="modal__icon"><Icon name="calendar" /></div><div><h2 id="availability-title">Kalender ketersediaan</h2><p>{item.title} · {item.available} dari {item.total} unit tersedia saat ini</p></div><button className="icon-btn" onClick={onClose} aria-label="Tutup kalender"><Icon name="close" /></button></div>
+    <div className="availability-calendar">
+      <div className="calendar-toolbar"><button className="icon-btn calendar-prev" onClick={() => moveMonth(-1)} aria-label="Bulan sebelumnya"><Icon name="chevron" size={18} /></button><div><span>JADWAL RESERVASI</span><h3>{monthNames[monthIndex]} {year}</h3></div><button className="icon-btn" onClick={() => moveMonth(1)} aria-label="Bulan berikutnya"><Icon name="chevron" size={18} /></button></div>
+      <div className="calendar-weekdays">{weekdays.map((day) => <span key={day}>{day}</span>)}</div>
+      <div className="calendar-grid">{cells.map((cell, index) => <div key={index} className={`calendar-day ${!cell ? "empty" : ""} ${cell?.selected ? "selected" : ""} ${cell?.unavailable ? "unavailable" : ""} ${cell?.limited ? "limited" : ""}`}>{cell && <><strong>{cell.day}</strong><span>{cell.selected ? "Dipilih" : cell.unavailable ? "Penuh" : cell.limited ? "Terbatas" : "Tersedia"}</span></>}</div>)}</div>
+      <div className="calendar-legend"><span><i className="available" />Tersedia</span><span><i className="limited" />Stok terbatas</span><span><i className="unavailable" />Tidak tersedia</span><span><i className="selected" />Tanggal dipilih</span></div>
+      <div className="calendar-selection"><div className="calendar-selection__icon"><Icon name="calendar" /></div><div><span>RENTANG PEMINJAMAN</span><strong>18–20 Maret 2026</strong><small>3 hari · Jadwal tidak bentrok</small></div><Badge tone="green">Tersedia</Badge></div>
+    </div>
+    <div className="modal__foot"><Button variant="secondary" onClick={onClose}>Tutup</Button><Button icon="check" onClick={onClose}>Gunakan tanggal ini</Button></div>
+  </section></div>;
+}
+
+function StudentTracking({ onBack, liveSubmitted, liveStatus, service }: { onBack: () => void; liveSubmitted: boolean; liveStatus: string; service: string }) {
+  const approved = liveSubmitted && liveStatus === "Disetujui";
+  const trackedItem = services.find((item) => item.title === service) ?? services[0];
+  const trackedSerial = trackedItem.serials[0];
+  const steps = liveSubmitted ? [{ name: "Diajukan", date: "Baru saja", done: true }, { name: "Disetujui", date: approved ? "Disetujui petugas" : "Menunggu petugas", done: approved, active: !approved }, { name: "Dipinjam", date: approved ? "Siap untuk handover" : "Belum tersedia", active: approved }, { name: "Selesai", date: "Belum tersedia", done: false }] : [{ name: "Diajukan", date: "12 Mar, 09:24", done: true }, { name: "Disetujui", date: "12 Mar, 14:10", done: true }, { name: "Dipinjam", date: "Siap diambil", active: true }, { name: "Selesai", date: "Menunggu", done: false }];
+  return <>
+    <div className="backline"><button onClick={onBack}><Icon name="arrow" size={17} /> Kembali ke riwayat</button><Badge tone="gray">#PJM-2026-0142</Badge></div>
+    <section className={`status-banner ${liveSubmitted ? "status-banner--live" : ""}`}><div className="status-banner__icon"><Icon name={liveSubmitted ? "check" : "clock"} size={28} /></div><div><Badge tone={liveSubmitted ? "green" : "yellow"}>{approved ? "DISETUJUI PETUGAS" : liveSubmitted ? "MENUNGGU VERIFIKASI PETUGAS" : "DIPROSES"}</Badge><h2>{approved ? "Pengajuan disetujui dan siap dialokasikan" : liveSubmitted ? "Pengajuan berhasil disinkronkan" : "Unit siap untuk serah terima"}</h2><p>{approved ? "Petugas telah menyetujui permohonan. Tunggu informasi serial unit dan jadwal handover." : liveSubmitted ? "Petugas Perkap telah menerima data dan Surat Permohonan Anda secara real-time." : `${trackedItem.title} telah dialokasikan. Bawa KTM saat mengambil unit di Gudang Perkap.`}</p></div><Button variant="secondary" icon="mail" onClick={() => { window.location.href = "mailto:perkap@unika.ac.id?subject=PJM-2026-0142"; }}>Hubungi Perkap</Button></section>
+    <section className="panel progress-panel"><div className="panel__title"><div><h2>Status peminjaman</h2><p>Pembaruan terakhir 12 Maret 2026, 14:10 WIB</p></div></div><div className="steps">{steps.map((step, index) => <div className={`step ${step.done ? "done" : ""} ${step.active ? "active" : ""}`} key={step.name}><div className="step__line" /><div className="step__dot">{step.done ? <Icon name="check" size={16} /> : index + 1}</div><strong>{step.name}</strong><span>{step.date}</span></div>)}</div></section>
+    <div className="detail-grid"><section className="panel"><div className="panel__title"><div><h2>Detail alat fisik</h2><p>Unit yang dialokasikan untuk Anda</p></div><Icon name="box" /></div><dl className="detail-list"><div><dt>Nama alat</dt><dd>{trackedItem.title}</dd></div><div><dt>Serial</dt><dd><code>{trackedSerial}</code></dd></div><div><dt>Kondisi awal</dt><dd>Baik · Kelengkapan penuh</dd></div><div><dt>Tanggal kembali</dt><dd>20 Maret 2026, 16:00</dd></div><div><dt>Lokasi ambil</dt><dd>Gudang Perkap, Gedung Mikael</dd></div></dl></section><section className="panel"><div className="panel__title"><div><h2>Surat permohonan</h2><p>Dokumen PDF telah diverifikasi</p></div><Badge tone="green">Valid</Badge></div><div className="file-item"><div className="file-icon"><Icon name="document" /></div><div><strong>Surat Permohonan.pdf</strong><span>1.2 MB · PDF</span></div></div><div className="document-actions"><Button variant="secondary" icon="document" onClick={() => window.open("data:text/plain;charset=utf-8,Surat%20Permohonan%20Peminjaman", "_blank")}>Lihat dokumen</Button><Button icon="download" onClick={() => downloadText("PJM-2026-0142.txt", `Bukti peminjaman PJM-2026-0142 · Serial ${trackedSerial}`)}>Unduh bukti</Button></div></section></div>
+    <section className="qr-ticket"><div className="qr-ticket__copy"><Badge tone="yellow">TIKET DIGITAL</Badge><h2>QR Peminjaman #PJM-2026-0142</h2><p>Tunjukkan kode ini kepada Petugas Perkap saat pengambilan dan pengembalian unit. QR terhubung ke serial <code>{trackedSerial}</code>.</p><div className="qr-ticket__meta"><span><Icon name="users" size={16} /> Aditya Saputra</span><span><Icon name="box" size={16} /> {trackedItem.title}</span><span><Icon name="calendar" size={16} /> 18–20 Mar 2026</span></div><Button variant="secondary" icon="download" onClick={() => downloadText("QR-PJM-2026-0142.txt", `QR TICKET\\nPJM-2026-0142\\nSerial: ${trackedSerial}\\nPeminjam: Aditya Saputra`)}>Unduh Tiket QR</Button></div><div className="qr-ticket__visual"><QRCode label="PJM-2026-0142" /><strong>PJM-2026-0142</strong><span>Valid untuk 1 transaksi</span></div></section>
+  </>;
+}
+
+function LiveCountdown({ initialSeconds, label }: { initialSeconds: number; label: string }) {
+  const [seconds, setSeconds] = useState(initialSeconds);
+  useEffect(() => {
+    const timer = window.setInterval(() => setSeconds((current) => current > 0 ? current - 1 : 0), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+  const hours = Math.floor(seconds / 3600).toString().padStart(2, "0");
+  const minutes = Math.floor((seconds % 3600) / 60).toString().padStart(2, "0");
+  const remaining = (seconds % 60).toString().padStart(2, "0");
+  return <span className="live-countdown"><i /><strong>{hours}:{minutes}:{remaining}</strong><small>{label}</small></span>;
+}
+
+function StudentHistory({ onView, liveSubmission, studentSubmitted }: { onView: () => void; liveSubmission: LiveSubmission; studentSubmitted: boolean }) {
+  const status = liveSubmission.status;
+  const statusLabel = status === "Disetujui" ? "Disetujui Petugas" : status === "Dipinjam" ? "Sedang Dipinjam" : status === "Dikembalikan" ? "Selesai" : status === "In Maintenance" ? "Unit Dalam Perbaikan" : status === "Ditolak" ? "Ditolak" : "Menunggu Verifikasi";
+  const statusTone: "yellow" | "green" | "blue" | "red" | "gray" = status === "Disetujui" ? "green" : status === "Dipinjam" ? "blue" : status === "Dikembalikan" ? "gray" : status === "In Maintenance" || status === "Ditolak" ? "red" : "yellow";
+  return <>
+    <div className="section-head admin-head"><div><h2>Live PJM Table</h2><p>Riwayat peminjaman tersinkron dengan validasi petugas dan QR handover.</p></div><Badge tone="green"><i className="live-dot" /> Real-time connected</Badge></div>
+    <section className="live-pjm-summary"><div><span>Pengajuan aktif</span><strong>{studentSubmitted ? "1" : "0"}</strong></div><div><span>Menunggu verifikasi</span><strong>{status === "Pending Review" ? "1" : "0"}</strong></div><div><span>Sedang dipinjam</span><strong>{status === "Dipinjam" ? "1" : "0"}</strong></div><div><span>Sinkron terakhir</span><strong>Baru saja</strong></div></section>
+    <section className="panel table-panel live-pjm-table"><div className="panel__title"><div><h2>Real-Time PJM History</h2><p>Status berubah otomatis saat petugas memvalidasi atau memindai QR.</p></div><Badge tone="purple">PJM Sync</Badge></div><div className="table-wrap"><table><thead><tr><th>ID / Item</th><th>Submitted</th><th>Live Status</th><th>SLA Countdown</th><th>QR Ticket</th><th>Detail</th></tr></thead><tbody>
+      <tr className={studentSubmitted ? "live-row" : ""}><td><strong>{studentSubmitted ? liveSubmission.id : "PJM-2026-0142"}</strong><small className="block">{studentSubmitted ? liveSubmission.service : "Proyektor Epson EB-X06"}</small></td><td>{studentSubmitted ? liveSubmission.submittedAt : "12 Mar · 09:24"}</td><td><StatusBadge tone={statusTone}>{statusLabel}</StatusBadge></td><td><LiveCountdown initialSeconds={status === "Dipinjam" ? 172800 : status === "Disetujui" ? 12600 : 6138} label={status === "Dipinjam" ? "menuju jatuh tempo" : status === "Disetujui" ? "menuju handover" : "SLA verifikasi"} /></td><td><Button variant="secondary" icon="scan" onClick={onView}>Buka QR Ticket</Button></td><td><Button variant="ghost" onClick={onView}>Lihat tracking <Icon name="arrow" size={14} /></Button></td></tr>
+      <tr><td><strong>PJM-2026-0098</strong><small className="block">Sound System Portable · SND-003</small></td><td>18 Feb · 08:30</td><td><StatusBadge tone="green">Disetujui Petugas</StatusBadge></td><td><LiveCountdown initialSeconds={9800} label="menuju handover" /></td><td><Button variant="secondary" icon="scan" onClick={() => window.alert("QR Ticket PJM-2026-0098 dibuka.")}>QR Ticket</Button></td><td><Button variant="ghost" onClick={() => downloadText("PJM-2026-0098.txt", "Detail PJM-2026-0098 · SND-003")}>Unduh detail</Button></td></tr>
+      <tr><td><strong>PJM-2026-0072</strong><small className="block">Tenda Lipat · TND-004</small></td><td>14 Feb · 13:10</td><td><StatusBadge tone="blue">Sedang Dipinjam</StatusBadge></td><td><LiveCountdown initialSeconds={38700} label="menuju jatuh tempo" /></td><td><Button variant="secondary" icon="scan" onClick={() => window.alert("QR Ticket PJM-2026-0072 dibuka.")}>QR Ticket</Button></td><td><Button variant="ghost" onClick={() => downloadText("PJM-2026-0072.txt", "Detail PJM-2026-0072 · TND-004")}>Unduh detail</Button></td></tr>
+    </tbody></table></div></section>
+    <section className="live-pjm-qr"><div className="live-pjm-qr__copy"><StatusBadge tone={statusTone}>{statusLabel}</StatusBadge><span>DIGITAL QR CODE TICKET</span><h2>{studentSubmitted ? liveSubmission.id : "PJM-2026-0142"}</h2><p>Gunakan tiket ini untuk proses check-out dan check-in di Gudang Perkap. Status QR tersinkron langsung dengan portal Petugas.</p><dl><div><dt>Peminjam</dt><dd>Aditya Saputra</dd></div><div><dt>Alat</dt><dd>{studentSubmitted ? liveSubmission.service : "Proyektor Epson EB-X06"}</dd></div><div><dt>Validitas</dt><dd>Satu transaksi aktif</dd></div></dl><div className="document-actions"><Button variant="secondary" icon="download" onClick={() => downloadText("QR-PJM-LIVE.txt", `QR TICKET\\n${studentSubmitted ? liveSubmission.id : "PJM-2026-0142"}\\n${studentSubmitted ? liveSubmission.service : "Proyektor Epson EB-X06"}`)}>Unduh QR Ticket</Button><Button icon="arrow" onClick={onView}>Buka Detail Tracking</Button></div></div><div className="live-pjm-qr__visual"><QRCode label={studentSubmitted ? liveSubmission.id : "PJM-2026-0142"} /><strong>SCAN AT PERKAP DESK</strong><small>Token tersinkron real-time</small></div></section>
+  </>;
+}
+
+function StudentNotifications() {
+  const [read, setRead] = useState<string[]>(["n3"]);
+  const notes = [{ id: "n1", title: "Unit telah dialokasikan", detail: "Proyektor EPS-001 siap diambil di Gudang Perkap.", time: "10 menit lalu" }, { id: "n2", title: "Pengajuan disetujui", detail: "PJM-2026-0142 telah lolos validasi petugas.", time: "2 jam lalu" }, { id: "n3", title: "Pengembalian selesai", detail: "Sound System SND-003 diterima dalam kondisi baik.", time: "18 Feb 2026" }];
+  return <><div className="section-head admin-head"><div><h2>Notifikasi</h2><p>Pembaruan alokasi, pengambilan, dan pengembalian alat.</p></div><Button variant="secondary" icon="check" onClick={() => setRead(notes.map((note) => note.id))}>Tandai semua dibaca</Button></div><section className="panel notification-list">{notes.map((note) => <button key={note.id} className={read.includes(note.id) ? "read" : ""} onClick={() => setRead((current) => [...new Set([...current, note.id])])}><span className="notification-list__icon"><Icon name="bell" /></span><span><strong>{note.title}</strong><small>{note.detail}</small></span><time>{note.time}</time>{!read.includes(note.id) && <i />}</button>)}</section></>;
+}
+
+type RequestRow = { id: string; initials: string; name: string; nim: string; type: string; date: string; status: string };
+type LiveSubmission = { id: string; email: string; service: string; file: string; submittedAt: string; status: string };
+type MaintenanceItem = { serial: string; item: string; issue: string; photo: string; reportedAt: string; status: "In Maintenance" | "Inspection" };
+type PhysicalUnitStatus = "Tersedia" | "Direservasi" | "Dipinjam" | "Perawatan";
+
+function getPhysicalUnitStatus(item: typeof services[number], serial: string, available: number, maintenanceItems: MaintenanceItem[] = [], liveSubmission?: LiveSubmission, studentSubmitted = false): PhysicalUnitStatus {
+  if (maintenanceItems.some((entry) => entry.serial === serial)) return "Perawatan";
+  const liveIsActive = Boolean(studentSubmitted && liveSubmission && liveSubmission.service === item.title && ["Pending Review", "Disetujui", "Dipinjam", "In Maintenance"].includes(liveSubmission.status));
+  const liveSerial = item.serials[0];
+  if (liveIsActive && liveSubmission && serial === liveSerial) {
+    if (liveSubmission.status === "In Maintenance") return "Perawatan";
+    if (liveSubmission.status === "Dipinjam") return "Dipinjam";
+    return "Direservasi";
+  }
+  const excluded = new Set(maintenanceItems.filter((entry) => entry.item === item.title).map((entry) => entry.serial));
+  if (liveIsActive) excluded.add(liveSerial);
+  const availableSerials = item.serials.filter((entry) => !excluded.has(entry)).slice(0, available);
+  return availableSerials.includes(serial) ? "Tersedia" : "Dipinjam";
+}
+
+function PhysicalStatusBadge({ item, serial, available, maintenanceItems = [], liveSubmission, studentSubmitted = false }: { item: typeof services[number]; serial: string; available: number; maintenanceItems?: MaintenanceItem[]; liveSubmission?: LiveSubmission; studentSubmitted?: boolean }) {
+  const status = getPhysicalUnitStatus(item, serial, available, maintenanceItems, liveSubmission, studentSubmitted);
+  return <Badge tone={status === "Tersedia" ? "green" : status === "Perawatan" ? "red" : "yellow"}>{status}</Badge>;
+}
+
+const defaultLiveSubmission: LiveSubmission = { id: "LIVE-PJM-001", email: "mahasiswa.test@unika.ac.id", service: "Sound System Portable", file: "Surat Permohonan Peminjaman.pdf", submittedAt: "baru saja", status: "Pending Review" };
+const initialRequests: RequestRow[] = [
+  { id: "PJM-0148", initials: "RN", name: "Rani Novitasari", nim: "22.G1.0042", type: "Sound System Portable", date: "Hari ini, 10:42", status: "Baru" },
+  { id: "PJM-0147", initials: "FD", name: "Ferdinand D.", nim: "23.K1.0018", type: "Tenda Lipat 3×3", date: "Hari ini, 09:15", status: "Verifikasi" },
+  { id: "PJM-0146", initials: "MA", name: "Maria Agatha", nim: "21.G1.0112", type: "Kamera Mirrorless", date: "Kemarin, 15:30", status: "Baru" },
+];
+
+function Metric({ label, value, detail, icon, tone }: { label: string; value: string; detail: string; icon: IconName; tone: string }) {
+  return <article className="metric"><div className={`metric__icon metric__icon--${tone}`}><Icon name={icon} /></div><div><span>{label}</span><strong>{value}</strong><small>{detail}</small></div></article>;
+}
+
+function StaffValidation({ liveSubmission = defaultLiveSubmission, onLiveStatus = () => undefined }: { liveSubmission?: LiveSubmission; onLiveStatus?: (status: string) => void }) {
+  const [rows, setRows] = useState(initialRequests);
+  const update = (id: string, status: string) => setRows((current) => current.map((row) => row.id === id ? { ...row, status } : row));
+  const viewPdf = (id: string) => window.open(`data:text/plain;charset=utf-8,Surat%20Permohonan%20${id}`, "_blank");
+  return <>
+    <div className="welcome"><div><h2>Validasi pengajuan baru</h2><p>Tabel ini khusus permohonan masuk. Pengingat pengembalian dikelola di Peminjaman Aktif.</p></div><Button icon="download" variant="secondary" onClick={() => downloadText("ringkasan-validasi-perkap.txt", "Ringkasan pengajuan baru Perkap: 4 pengajuan")}>Unduh ringkasan</Button></div>
+    <section className="live-feed"><div className="live-feed__pulse" /><div><Badge tone="green">LIVE TEST FEED</Badge><h3>Pengajuan baru dari Portal Mahasiswa</h3><p><b>{liveSubmission.email}</b> mengajukan <b>{liveSubmission.service}</b> · {liveSubmission.submittedAt}.</p></div><Icon name="arrow" /></section>
+    <div className="metrics"><Metric label="Pengajuan masuk" value="4" detail="Termasuk 1 data live" icon="document" tone="purple" /><Metric label="Pending review" value={String(rows.filter((row) => !["Disetujui", "Ditolak"].includes(row.status)).length + (liveSubmission.status === "Pending Review" ? 1 : 0))} detail="Perlu keputusan" icon="clock" tone="gold" /><Metric label="Disetujui hari ini" value={String(rows.filter((row) => row.status === "Disetujui").length + (liveSubmission.status === "Disetujui" ? 1 : 0))} detail="Siap alokasi unit" icon="check" tone="green" /></div>
+    <section className="panel table-panel incoming-only"><div className="panel__title"><div><h2>New Incoming Requests / Pending Validation</h2><p>Hanya validasi pengajuan dan dokumen PDF; tidak ada tindakan follow-up di tabel ini.</p></div><Badge tone="purple">4 requests</Badge></div><div className="table-wrap"><table><thead><tr><th>Student Info</th><th>Item Requested</th><th>PDF Document Link</th><th>Action</th></tr></thead><tbody>
+      <tr className="live-row"><td><div className="person"><span className="avatar avatar--small">MT</span><div><strong>{liveSubmission.email}</strong><small>PJM Live Test · <Badge tone={liveSubmission.status === "Disetujui" ? "green" : liveSubmission.status === "Ditolak" ? "red" : "yellow"}>{liveSubmission.status}</Badge></small></div></div></td><td><strong>{liveSubmission.service}</strong><small className="block">Pengajuan Perkap</small></td><td><Button variant="secondary" icon="document" onClick={() => viewPdf(liveSubmission.id)}>Surat Permohonan.pdf</Button></td><td><div className="row-actions"><Button variant="secondary" icon="check" disabled={liveSubmission.status === "Disetujui"} onClick={() => onLiveStatus("Disetujui")}>Setujui</Button><Button variant="danger" icon="close" disabled={liveSubmission.status === "Ditolak"} onClick={() => onLiveStatus("Ditolak")}>Tolak</Button></div></td></tr>
+      {rows.map((row) => <tr key={row.id}><td><div className="person"><span className="avatar avatar--small">{row.initials}</span><div><strong>{row.name}</strong><small>{row.nim} · {row.status}</small></div></div></td><td>{row.type}</td><td><Button variant="secondary" icon="document" onClick={() => viewPdf(row.id)}>Surat Permohonan.pdf</Button></td><td><div className="row-actions"><Button variant="secondary" icon="check" disabled={row.status === "Disetujui"} onClick={() => update(row.id, "Disetujui")}>Setujui</Button><Button variant="danger" icon="close" disabled={row.status === "Ditolak"} onClick={() => update(row.id, "Ditolak")}>Tolak</Button></div></td></tr>)}
+    </tbody></table></div></section>
+  </>;
+}
+
+function ActiveLoans({ onFollowup }: { onFollowup: (email: string) => void }) {
+  const loans = [{ id: "PJM-0134", borrower: "Bima Dwi", email: "bima.dwi@student.unika.ac.id", item: "Proyektor Epson EB-X06", serial: "EPS-004", due: "10 Mar 2026", status: "Overdue", detail: "Terlambat 2 hari" }, { id: "PJM-0138", borrower: "Laura Cecilia", email: "laura.cecilia@student.unika.ac.id", item: "Sound System Portable", serial: "SND-002", due: "16 Mar 2026", status: "Active", detail: "Jatuh tempo besok" }, { id: "PJM-0140", borrower: "Raka Pratama", email: "raka.pratama@student.unika.ac.id", item: "Kamera Mirrorless Sony", serial: "CAM-002", due: "22 Mar 2026", status: "Active", detail: "7 hari lagi" }];
+  return <>
+    <div className="section-head admin-head"><div><h2>Active Loans / Overdue Items</h2><p>Pantau unit yang sedang dipinjam dan kirim pengingat pengembalian.</p></div><Badge tone="red">1 overdue</Badge></div>
+    <div className="metrics"><Metric label="Peminjaman aktif" value="16" detail="Unit di luar gudang" icon="box" tone="purple" /><Metric label="Jatuh tempo dekat" value="4" detail="Dalam 2 hari" icon="clock" tone="gold" /><Metric label="Overdue" value="1" detail="Perlu follow-up" icon="mail" tone="blue" /></div>
+    <section className="panel table-panel overdue"><div className="panel__title"><div><h2>Peminjaman aktif dan terlambat</h2><p>Email otomatis berjalan pukul 08:00 WIB; tombol manual hanya tersedia untuk item overdue.</p></div><Badge tone="purple">Scheduler aktif</Badge></div><div className="table-wrap"><table><thead><tr><th>Peminjam</th><th>Borrowed Item</th><th>Serial Number</th><th>Due Date</th><th>Status</th><th>Reminder Action</th></tr></thead><tbody>{loans.map((loan) => <tr key={loan.id}><td><strong>{loan.borrower}</strong><small className="block">{loan.id}</small></td><td>{loan.item}</td><td><code>{loan.serial}</code></td><td><strong className={loan.status === "Overdue" ? "danger-text" : ""}>{loan.due}</strong><small className="block">{loan.detail}</small></td><td><Badge tone={loan.status === "Overdue" ? "red" : "green"}>{loan.status}</Badge></td><td>{loan.status === "Overdue" ? <Button variant="warning" icon="mail" onClick={() => onFollowup(loan.email)}>Kirim Email Follow-up</Button> : <Badge tone="gray">Otomatis saat overdue</Badge>}</td></tr>)}</tbody></table></div></section>
+  </>;
+}
+
+function FollowupModal({ email, onClose }: { email: string; onClose: () => void }) {
+  const [sent, setSent] = useState(false);
+  const [recipient, setRecipient] = useState(email);
+  const [subject, setSubject] = useState("Pengingat: Segera Kembalikan Alat Perkap yang Dipinjam");
+  const [message, setMessage] = useState("Yth. Peminjam,\n\nMasa peminjaman alat Perkap Anda telah berakhir. Mohon segera mengembalikan unit beserta seluruh kelengkapannya ke Gudang Perkap.\n\nTerima kasih.\nUnit Perkap UNIKA");
+  return <div className="modal-backdrop" role="presentation"><section className="modal" role="dialog" aria-modal="true"><div className="modal__head"><div className="modal__icon"><Icon name={sent ? "check" : "mail"} /></div><div><h2>{sent ? "Email berhasil dikirim" : "Kirim email follow-up"}</h2><p>{sent ? "Email tercatat pada audit trail." : "Pemicu manual untuk pengingat pengembalian alat."}</p></div><button className="icon-btn" onClick={onClose} aria-label="Tutup modal"><Icon name="close" /></button></div>{sent ? <div className="success-state"><div><Icon name="check" size={32} /></div><strong>Email pengingat terkirim</strong><p>Notifikasi dikirim kepada {recipient}.</p><Button onClick={onClose}>Selesai</Button></div> : <><div className="modal__body"><label className="field"><span>Penerima</span><div className="field__control"><Icon name="mail" size={18} /><input type="email" value={recipient} onChange={(event) => setRecipient(event.target.value)} /></div></label><label className="field"><span>Subjek</span><div className="field__control"><input value={subject} onChange={(event) => setSubject(event.target.value)} /></div></label><label className="field"><span>Pesan</span><textarea value={message} onChange={(event) => setMessage(event.target.value)} /></label><div className="email-note"><Icon name="clock" size={17} /> Scheduler otomatis berikutnya: besok, 08:00 WIB</div></div><div className="modal__foot"><Button variant="secondary" onClick={onClose}>Batalkan</Button><Button icon="mail" disabled={!recipient.includes("@") || !subject.trim() || !message.trim()} onClick={() => setSent(true)}>Kirim Email Pengingat Sekarang</Button></div></>}</section></div>;
+}
+
+function InventoryStock({ stockLevels = {}, maintenanceItems = [], liveSubmission = defaultLiveSubmission, studentSubmitted = false }: { stockLevels?: Record<string, number>; maintenanceItems?: MaintenanceItem[]; liveSubmission?: LiveSubmission; studentSubmitted?: boolean }) {
+  const [selected, setSelected] = useState(services[0]);
+  const [selectedUnit, setSelectedUnit] = useState<{ serial: string; status: PhysicalUnitStatus } | null>(null);
+  const selectedAvailable = stockLevels[selected.title] ?? selected.available;
+  return <><div className="section-head admin-head"><div><h2>Stok fisik & nomor seri</h2><p>Pantau kondisi setiap unit ItemStock secara individual.</p></div><Badge tone="green">Sinkron real-time</Badge></div><div className="inventory-layout"><section className="panel inventory-list">{services.slice(0, 4).map((item) => <button key={item.title} className={selected.title === item.title ? "active" : ""} onClick={() => setSelected(item)}><span className={`service-icon service-icon--${item.tone}`}><Icon name={item.icon} /></span><span><strong>{item.title}</strong><small>{stockLevels[item.title] ?? item.available} dari {item.total} tersedia</small></span><Icon name="chevron" size={17} /></button>)}</section><section className="panel"><div className="panel__title"><div><h2>{selected.title}</h2><p>Daftar unit fisik dan status operasional</p></div><Badge tone="purple">ItemStock</Badge></div><div className="serial-grid">{selected.serials.map((serial) => { const status = getPhysicalUnitStatus(selected, serial, selectedAvailable, maintenanceItems, liveSubmission, studentSubmitted); const tone = status === "Tersedia" ? "green" : status === "Perawatan" ? "red" : "yellow"; return <article key={serial}><div><code>{serial}</code><Badge tone={tone}>{status}</Badge></div><span>Kondisi: {status === "Tersedia" ? "Baik" : status === "Direservasi" ? "Dialokasikan untuk pengajuan" : status === "Dipinjam" ? "Dalam penggunaan" : "Pemeriksaan teknis"}</span><Button variant="secondary" onClick={() => setSelectedUnit({ serial, status })}>Lihat unit</Button></article>; })}</div></section></div>{selectedUnit && <UnitDetailModal item={selected} serial={selectedUnit.serial} status={selectedUnit.status} onClose={() => setSelectedUnit(null)} />}</>;
+}
+
+function UnitDetailModal({ item, serial, status, onClose }: { item: typeof services[number]; serial: string; status: PhysicalUnitStatus; onClose: () => void }) {
+  const tone = status === "Tersedia" ? "green" : status === "Perawatan" ? "red" : "yellow";
+  const condition = status === "Tersedia" ? "Baik · Kelengkapan penuh" : status === "Direservasi" ? "Dialokasikan · Menunggu handover" : status === "Dipinjam" ? "Dalam penggunaan" : "Dalam pemeriksaan teknis";
+  return <div className="modal-backdrop" role="presentation"><section className="modal unit-detail-modal" role="dialog" aria-modal="true" aria-labelledby="unit-detail-title">
+    <div className="modal__head"><div className={`service-icon service-icon--${item.tone}`}><Icon name={item.icon} /></div><div><h2 id="unit-detail-title">Detail unit fisik</h2><p>Informasi inventaris dan aktivitas berdasarkan nomor seri.</p></div><button className="icon-btn" onClick={onClose} aria-label="Tutup detail unit"><Icon name="close" /></button></div>
+    <div className="modal__body">
+      <section className="unit-detail-hero"><div><span>{item.category}</span><h3>{item.title}</h3><code>{serial}</code></div><StatusBadge tone={tone}>{status}</StatusBadge></section>
+      <div className="unit-detail-grid"><div><span>Kondisi unit</span><strong>{condition}</strong></div><div><span>Lokasi penyimpanan</span><strong>Gudang Perkap · Rak A-03</strong></div><div><span>Tanggal registrasi</span><strong>12 Januari 2025</strong></div><div><span>Servis terakhir</span><strong>{status === "Perawatan" ? "Sedang berlangsung" : "4 Februari 2026"}</strong></div></div>
+      <section className="unit-history"><div className="panel__title"><div><h2>Riwayat aktivitas</h2><p>Perubahan status terbaru untuk unit {serial}</p></div><Badge tone="gray">Audit unit</Badge></div>
+        <div className="unit-history__item"><span className="unit-history__icon"><Icon name={status === "Perawatan" ? "settings" : status === "Direservasi" ? "clock" : "check"} size={17} /></span><div><strong>{status === "Perawatan" ? "Unit masuk pemeriksaan" : status === "Direservasi" ? "Unit dialokasikan untuk pengajuan" : status === "Dipinjam" ? "Unit diserahkan kepada peminjam" : "Unit tersedia di gudang"}</strong><small>Hari ini · 14:32 WIB</small></div><Badge tone={tone}>{status}</Badge></div>
+        <div className="unit-history__item"><span className="unit-history__icon"><Icon name="history" size={17} /></span><div><strong>Pemeriksaan kondisi berkala</strong><small>4 Februari 2026 · Dina Pratiwi</small></div><Badge tone="green">Baik</Badge></div>
+        <div className="unit-history__item"><span className="unit-history__icon"><Icon name="box" size={17} /></span><div><strong>Unit terdaftar ke inventaris</strong><small>12 Januari 2025 · System Admin</small></div><Badge tone="gray">Tercatat</Badge></div>
+      </section>
+      <div className="security-note"><Icon name="shield" size={18} /><div><strong>Data unit tersinkron</strong><span>Perubahan handover dan maintenance akan otomatis memperbarui status unit ini.</span></div></div>
+    </div>
+    <div className="modal__foot"><Button variant="secondary" onClick={onClose}>Tutup</Button><Button icon="download" onClick={() => downloadText(`unit-${serial}.txt`, `${item.title}\\nSerial: ${serial}\\nStatus: ${status}\\nKondisi: ${condition}`)}>Unduh detail unit</Button></div>
+  </section></div>;
+}
+
+function QRScanner({ onMaintenanceAdd, onLoanStatus, service }: { onMaintenanceAdd: (item: MaintenanceItem) => void; onLoanStatus: (status: string) => void; service: string }) {
+  const [scanStep, setScanStep] = useState(0);
+  const [condition, setCondition] = useState("Mulus, normal, kelengkapan lengkap");
+  const [photoName, setPhotoName] = useState("");
+  const [checks, setChecks] = useState([true, true, true]);
+  const [needsMaintenance, setNeedsMaintenance] = useState(false);
+  const scannedItem = services.find((item) => item.title === service) ?? services[0];
+  const scannedSerial = scannedItem.serials[0];
+  const isConfirmation = scanStep === 1 || scanStep === 3;
+  const status = scanStep === 0 ? "Siap dipindai" : scanStep === 1 ? "Menunggu konfirmasi keluar" : scanStep === 2 ? "Dipinjam" : scanStep === 3 ? "Menunggu konfirmasi masuk" : needsMaintenance ? "In Maintenance" : "Dikembalikan";
+  const resetEvidence = (note: string) => { setCondition(note); setPhotoName(""); setChecks([true, true, true]); setNeedsMaintenance(false); };
+  const simulateScan = () => {
+    if (scanStep === 0) { resetEvidence("Mulus, normal, kelengkapan lengkap"); setScanStep(1); }
+    else if (scanStep === 2) { resetEvidence("Normal, terdapat lecet ringan pada sisi kanan"); setScanStep(3); }
+    else if (scanStep === 4) { resetEvidence("Mulus, normal, kelengkapan lengkap"); setScanStep(0); }
+  };
+  const confirmHandover = () => {
+    if (scanStep === 3 && needsMaintenance) onMaintenanceAdd({ serial: scannedSerial, item: scannedItem.title, issue: condition, photo: photoName, reportedAt: "Baru saja", status: "In Maintenance" });
+    onLoanStatus(scanStep === 1 ? "Dipinjam" : needsMaintenance ? "In Maintenance" : "Dikembalikan");
+    setScanStep((current) => current === 1 ? 2 : 4);
+  };
+  const evidenceComplete = condition.trim() && photoName && checks.every(Boolean);
+  return <>
+    <div className="section-head admin-head"><div><h2>Scan QR & serah terima</h2><p>Catat foto, kelengkapan, dan kondisi sebelum check-out maupun check-in.</p></div><Badge tone={scanStep === 0 ? "yellow" : needsMaintenance && scanStep === 4 ? "red" : scanStep === 4 ? "green" : "purple"}>{status}</Badge></div>
+    <div className="scanner-layout"><section className="scanner-card"><div className="scanner-card__head"><span><Icon name="scan" /> Scan QR Tiket Peminjaman / Serial Barang</span><i /></div><div className={`scanner-viewfinder ${scanStep > 0 ? "scanner-viewfinder--success" : ""}`}><div className="scanner-grid" /><span className="scan-corner scan-corner--tl" /><span className="scan-corner scan-corner--tr" /><span className="scan-corner scan-corner--bl" /><span className="scan-corner scan-corner--br" /><div className="scan-line" />{scanStep > 0 && <div className="scan-success"><Icon name={isConfirmation ? "scan" : needsMaintenance ? "settings" : "check"} size={34} /><strong>{isConfirmation ? "QR berhasil dibaca" : status}</strong><span>{isConfirmation ? "Lengkapi bukti kondisi sebelum konfirmasi" : needsMaintenance ? "Unit dikarantina dan tidak dapat dipinjam" : "Status dan stok fisik telah diperbarui"}</span></div>}</div>{!isConfirmation && <Button icon="scan" onClick={simulateScan}>{scanStep === 0 ? "Simulasi Scan Berhasil" : scanStep === 2 ? "Simulasi Scan Pengembalian" : "Scan Transaksi Berikutnya"}</Button>}<p className="scanner-hint">Kamera simulasi · Membaca QR tiket atau label serial ItemStock</p></section>
+      <section className="panel scan-result"><div className="panel__title"><div><h2>Hasil identifikasi</h2><p>Data tiket dan unit fisik yang dipindai</p></div><Badge tone={scanStep === 0 ? "gray" : isConfirmation ? "yellow" : needsMaintenance ? "red" : "green"}>{scanStep === 0 ? "Menunggu QR" : isConfirmation ? "Perlu bukti kondisi" : "Tercatat"}</Badge></div>{scanStep === 0 ? <div className="scan-empty"><Icon name="scan" size={42} /><strong>Arahkan QR ke area pemindai</strong><span>Data peminjaman akan muncul secara otomatis.</span></div> : <><div className="scan-identity"><span className="avatar">AS</span><div><strong>Aditya Saputra</strong><small>22.G1.0087 · mahasiswa.test@unika.ac.id</small></div></div><dl className="detail-list"><div><dt>ID Peminjaman</dt><dd>PJM-2026-0142</dd></div><div><dt>Alat / Serial</dt><dd>{scannedItem.title} · <code>{scannedSerial}</code></dd></div><div><dt>Status terbaru</dt><dd><Badge tone={needsMaintenance ? "red" : isConfirmation ? "yellow" : "green"}>{status}</Badge></dd></div></dl><label className={`condition-box ${isConfirmation ? "condition-box--active" : ""}`}><span><Icon name="document" size={17} /> Catatan Fisik Barang Saat {scanStep <= 2 ? "Keluar" : "Masuk"}</span><textarea value={condition} onChange={(event) => setCondition(event.target.value)} disabled={!isConfirmation} placeholder="Contoh: Mulus / Ada kerusakan" /></label>{isConfirmation && <><div className="condition-checklist"><strong>Checklist kelengkapan</strong>{["Unit utama", "Kabel & adaptor", "Tas / aksesori"].map((label, index) => <label key={label}><input type="checkbox" checked={checks[index]} onChange={() => setChecks((current) => current.map((value, i) => i === index ? !value : value))} /><span>{label}</span></label>)}</div><label className="condition-photo"><input type="file" accept="image/*" onChange={(event) => setPhotoName(event.target.files?.[0]?.name ?? "")} /><span><Icon name="upload" size={17} />{photoName || "Unggah foto kondisi fisik"}</span></label>{scanStep === 3 && <label className={`maintenance-toggle ${needsMaintenance ? "active" : ""}`}><input type="checkbox" checked={needsMaintenance} onChange={(event) => setNeedsMaintenance(event.target.checked)} /><span><Icon name="settings" /><div><strong>Tandai Perlu Perbaikan / Maintenance</strong><small>Unit dikarantina dan dikeluarkan dari available_stock.</small></div></span></label>}<Button className="btn--wide" icon="check" disabled={!evidenceComplete} onClick={confirmHandover}>Konfirmasi Handover ({scanStep === 1 ? "Check-out" : "Check-in"})</Button></>}{!isConfirmation && <div className={`security-note ${needsMaintenance ? "security-note--danger" : ""}`}><Icon name={needsMaintenance ? "settings" : "check"} /><div><strong>{needsMaintenance ? "Unit masuk karantina perbaikan" : "Transaksi tercatat"}</strong><span>Kondisi: {condition}. Bukti foto: {photoName || "tersimpan"}.</span></div></div>}</>}</section></div>
+    <section className="panel table-panel"><div className="panel__title"><div><h2>Aktivitas handover terbaru</h2><p>Riwayat foto dan kondisi fisik dari pemindaian QR</p></div><Badge tone="green">Audit tercatat</Badge></div><div className="table-wrap"><table><thead><tr><th>Waktu</th><th>ID</th><th>Unit / Serial</th><th>Aktivitas</th><th>Catatan kondisi</th><th>Bukti</th></tr></thead><tbody><tr className={scanStep > 0 ? "live-row" : ""}><td>Baru saja</td><td><b>PJM-2026-0142</b></td><td>{scannedItem.title} · <code>{scannedSerial}</code></td><td><Badge tone={needsMaintenance ? "red" : scanStep === 4 ? "green" : "yellow"}>{status}</Badge></td><td>{condition}</td><td>{photoName || "Menunggu foto"}</td></tr><tr><td>10:15</td><td><b>PJM-2026-0138</b></td><td>Sound System · <code>SND-002</code></td><td><Badge tone="yellow">Dipinjam</Badge></td><td>Mulus, normal, kabel lengkap</td><td>checkout-snd002.jpg</td></tr></tbody></table></div></section>
+  </>;
+}
+
+function MaintenancePanel({ items, onUpdate, onResolve }: { items: MaintenanceItem[]; onUpdate: (serial: string, status: MaintenanceItem["status"]) => void; onResolve: (serial: string) => void }) {
+  return <><div className="section-head admin-head"><div><h2>Item Maintenance / Perbaikan</h2><p>Unit rusak dikarantina dan tidak dihitung sebagai available_stock.</p></div><Badge tone="red">{items.length} unit dikarantina</Badge></div><div className="metrics"><Metric label="In Maintenance" value={String(items.filter((item) => item.status === "In Maintenance").length)} detail="Sedang diperbaiki" icon="settings" tone="gold" /><Metric label="Inspection" value={String(items.filter((item) => item.status === "Inspection").length)} detail="Menunggu pemeriksaan" icon="search" tone="purple" /><Metric label="Selesai bulan ini" value="7" detail="Kembali tersedia" icon="check" tone="green" /></div><section className="panel table-panel maintenance-panel"><div className="panel__title"><div><h2>Karantina ItemStock</h2><p>Riwayat insiden, bukti foto, dan progres perbaikan per serial.</p></div></div><div className="table-wrap"><table><thead><tr><th>Item / Serial</th><th>Incident Note</th><th>Photo Evidence</th><th>Reported</th><th>Status</th><th>Action</th></tr></thead><tbody>{items.map((item) => <tr key={item.serial}><td><strong>{item.item}</strong><small className="block"><code>{item.serial}</code></small></td><td>{item.issue}</td><td><Button variant="secondary" icon="document" onClick={() => window.alert(`Bukti foto ${item.photo} dibuka.`)}>{item.photo}</Button></td><td>{item.reportedAt}</td><td><Badge tone={item.status === "In Maintenance" ? "red" : "yellow"}>{item.status}</Badge></td><td><div className="row-actions">{item.status === "Inspection" ? <Button variant="warning" icon="settings" onClick={() => onUpdate(item.serial, "In Maintenance")}>Mulai perbaikan</Button> : <Button icon="check" onClick={() => onResolve(item.serial)}>Tandai selesai</Button>}</div></td></tr>)}</tbody></table></div>{!items.length && <div className="empty-state"><Icon name="check" size={32} /><h3>Tidak ada unit dalam perbaikan</h3><p>Semua ItemStock tersedia atau sedang dipinjam.</p></div>}</section></>;
+}
+
+function Reports() {
+  const handovers = [{ id: "PJM-0142", borrower: "Aditya Saputra", serial: "EPS-001", event: "Siap diserahkan", time: "Hari ini · 14:30" }, { id: "PJM-0138", borrower: "Laura Cecilia", serial: "SND-002", event: "Unit diserahkan", time: "Hari ini · 10:15" }, { id: "PJM-0129", borrower: "Raka Pratama", serial: "CAM-001", event: "Dikembalikan", time: "Kemarin · 16:42" }];
+  return <>
+    <div className="section-head admin-head"><div><h2>Laporan logistik Perkap</h2><p>Rekap peminjaman, serah terima fisik, dan ketepatan pengembalian.</p></div><Button icon="printer" onClick={() => window.print()}>Cetak Laporan Rekapitulasi PDF</Button></div>
+    <div className="metrics"><Metric label="Total peminjaman" value="186" detail="Maret 2026" icon="box" tone="purple" /><Metric label="Kembali tepat waktu" value="92%" detail="Target 90%" icon="check" tone="green" /><Metric label="Utilisasi unit" value="68%" detail="Rata-rata inventaris" icon="chart" tone="gold" /></div>
+    <section className="panel table-panel"><div className="panel__title"><div><h2>Pelacakan serah terima unit fisik</h2><p>Aktivitas terbaru berdasarkan nomor seri ItemStock</p></div><Badge tone="green">Logistik langsung</Badge></div><div className="table-wrap"><table><thead><tr><th>ID</th><th>Peminjam</th><th>Serial fisik</th><th>Aktivitas</th><th>Waktu</th><th>Bukti</th></tr></thead><tbody>{handovers.map((entry) => <tr key={entry.id}><td><b>{entry.id}</b></td><td>{entry.borrower}</td><td><code>{entry.serial}</code></td><td><Badge tone={entry.event === "Dikembalikan" ? "green" : "yellow"}>{entry.event}</Badge></td><td>{entry.time}</td><td><Button variant="secondary" icon="download" onClick={() => downloadText(`serah-terima-${entry.id}.txt`, `${entry.id} · ${entry.serial} · ${entry.event}`)}>Unduh bukti</Button></td></tr>)}</tbody></table></div></section>
+    <div className="handover-grid"><section className="panel"><div className="panel__title"><div><h2>Utilisasi per kategori</h2><p>Persentase unit yang digunakan bulan ini</p></div></div>{services.slice(0, 4).map((item, index) => <div className={`report-row report-row--${index + 1}`} key={item.title}><span>{item.title}</span><div><i /></div><strong>{[88, 64, 52, 37][index]}%</strong></div>)}</section><section className="report-card"><div className="report-card__art"><Icon name="chart" size={44} /></div><Badge tone="yellow">LAPORAN BULANAN</Badge><h2>Rekapitulasi Perkap Maret 2026</h2><p>Stok, serial fisik, serah terima, keterlambatan, dan tindak lanjut melalui email.</p><div className="report-stats"><div><strong>186</strong><span>Peminjaman</span></div><div><strong>92%</strong><span>Tepat waktu</span></div></div><Button variant="secondary" icon="download" onClick={() => downloadText("rekap-perkap-maret-2026.csv", "nama_alat,stok_total,stok_tersedia\nProyektor,5,3\nSistem Suara Portabel,4,2")}>Unduh data CSV</Button></section></div>
+  </>;
+}
+
+type UserRole = "Mahasiswa" | "Petugas Perkap" | "Super Admin";
+type UserRow = { name: string; id: string; role: UserRole; unit: string; active: boolean };
+
+function AddUserModal({ onClose, onAdd }: { onClose: () => void; onAdd: (user: UserRow) => void }) {
+  const [name, setName] = useState("");
+  const [identity, setIdentity] = useState("");
+  const [unit, setUnit] = useState("");
+  const [role, setRole] = useState<UserRole>("Mahasiswa");
+  const roleOptions: { value: UserRole; description: string; tone: "gray" | "purple" | "red" }[] = [
+    { value: "Mahasiswa", description: "Mengajukan dan memantau peminjaman alat.", tone: "gray" },
+    { value: "Petugas Perkap", description: "Memvalidasi, menyerahkan, dan menerima unit.", tone: "purple" },
+    { value: "Super Admin", description: "Mengelola pengguna, master alat, dan audit.", tone: "red" },
+  ];
+  const submit = (event: FormEvent) => {
+    event.preventDefault();
+    if (!name.trim() || !identity.trim() || !unit.trim()) return;
+    onAdd({ name: name.trim(), id: identity.trim(), role, unit: unit.trim(), active: true });
+  };
+  return <div className="modal-backdrop" role="presentation"><form className="modal add-user-modal" role="dialog" aria-modal="true" aria-labelledby="add-user-title" onSubmit={submit}>
+    <div className="modal__head"><div className="modal__icon"><Icon name="users" /></div><div><h2 id="add-user-title">Tambah pengguna baru</h2><p>Lengkapi identitas dan tentukan hak akses pengguna.</p></div><button type="button" className="icon-btn" onClick={onClose} aria-label="Tutup modal"><Icon name="close" /></button></div>
+    <div className="modal__body">
+      <div className="form-grid"><Field label="Nama lengkap" placeholder="Contoh: Aditya Saputra" value={name} onChange={setName} /><Field label="NIM / NIP" placeholder="Contoh: 22.G1.0087" value={identity} onChange={setIdentity} /></div>
+      <Field label="Fakultas / Unit kerja" placeholder="Contoh: Ilmu Komputer atau Perkap" value={unit} onChange={setUnit} />
+      <fieldset className="role-selector"><legend>Role dan hak akses</legend><p>Pilih satu role sesuai tanggung jawab pengguna.</p><div>{roleOptions.map((option) => <button type="button" key={option.value} className={role === option.value ? "active" : ""} onClick={() => setRole(option.value)} aria-pressed={role === option.value}><span className="role-selector__check">{role === option.value && <Icon name="check" size={15} />}</span><span><strong>{option.value}</strong><small>{option.description}</small></span><Badge tone={option.tone}>{option.value === "Mahasiswa" ? "Peminjam" : option.value === "Petugas Perkap" ? "Operasional" : "Akses penuh"}</Badge></button>)}</div></fieldset>
+      <div className="security-note"><Icon name="shield" size={18} /><div><strong>Akun langsung aktif</strong><span>Pengguna dapat mengakses portal sesuai role setelah akun tersimpan.</span></div></div>
+    </div>
+    <div className="modal__foot"><Button variant="secondary" onClick={onClose}>Batalkan</Button><Button type="submit" icon="plus" disabled={!name.trim() || !identity.trim() || !unit.trim()}>Tambah Pengguna</Button></div>
+  </form></div>;
+}
+
+function AdminConsole({ section, stockLevels = {}, onStockChange = () => undefined, maintenanceItems = [], liveSubmission = defaultLiveSubmission, studentSubmitted = false }: { section: string; stockLevels?: Record<string, number>; onStockChange?: (service: string, delta: number) => void; maintenanceItems?: MaintenanceItem[]; liveSubmission?: LiveSubmission; studentSubmitted?: boolean }) {
+  const [users, setUsers] = useState<UserRow[]>([{ name: "Aditya Saputra", id: "22.G1.0087", role: "Mahasiswa", unit: "Ilmu Komputer", active: true }, { name: "Dina Pratiwi", id: "19890218", role: "Petugas Perkap", unit: "Perkap", active: true }, { name: "Rafael Santoso", id: "19780112", role: "Super Admin", unit: "Perkap", active: true }, { name: "Maria Agatha", id: "21.G1.0112", role: "Mahasiswa", unit: "Ekonomi & Bisnis", active: false }]);
+  const [query, setQuery] = useState("");
+  const [stocks, setStocks] = useState(services.slice(0, 4).map((item) => ({ ...item, serials: [...item.serials] })));
+  const [showAddUser, setShowAddUser] = useState(false);
+  useEffect(() => setStocks((current) => current.map((item) => ({ ...item, available: stockLevels[item.title] ?? item.available }))), [stockLevels]);
+  const changeAvailableStock = (index: number, delta: number) => {
+    const item = stocks[index];
+    const available = stockLevels[item.title] ?? item.available;
+    const next = Math.min(item.total, Math.max(0, available + delta));
+    if (next === available) return;
+    setStocks((current) => current.map((stock, i) => i === index ? { ...stock, available: next } : stock));
+    onStockChange(item.title, delta);
+  };
+  const addItemStock = (index: number) => {
+    const serial = window.prompt("Nomor seri unit baru");
+    if (!serial?.trim()) return;
+    const item = stocks[index];
+    setStocks((current) => current.map((stock, i) => i === index ? { ...stock, serials: [...stock.serials, serial.trim()], total: stock.total + 1, available: stock.available + 1 } : stock));
+    onStockChange(item.title, 1);
+  };
+  if (section === "services") return <><div className="section-head admin-head"><div><Badge tone="purple">SUPER ADMIN PERKAP</Badge><h2>Master alat Perkap</h2><p>Konfigurasi total_stock, available_stock, dan ItemStock fisik.</p></div><Button variant="secondary" icon="download" onClick={() => downloadText("master-alat.csv", stocks.map((item) => `${item.title},${item.total},${item.available}`).join("\n"))}>Ekspor stok</Button></div><div className="config-grid">{stocks.map((item, index) => <article className="panel config-card" key={item.title}><div className={`service-icon service-icon--${item.tone}`}><Icon name={item.icon} /></div><div className="config-card__heading"><div><span>{item.category}</span><h3>{item.title}</h3></div><label className="switch" title="Aktifkan alat"><input type="checkbox" defaultChecked /><span /></label></div><div className="stock-config"><div><label>total_stock</label><span><button onClick={() => setStocks((current) => current.map((stock, i) => i === index ? { ...stock, total: Math.max(stock.available, stock.total - 1) } : stock))}>−</button><strong>{item.total}</strong><button onClick={() => setStocks((current) => current.map((stock, i) => i === index ? { ...stock, total: stock.total + 1 } : stock))}>+</button></span></div><div><label>available_stock</label><span><button onClick={() => changeAvailableStock(index, -1)}>−</button><strong>{item.available}</strong><button onClick={() => changeAvailableStock(index, 1)}>+</button></span></div></div><div className="serial-preview"><div><strong>ItemStock · Nomor seri fisik</strong><Badge tone="gray">{item.serials.length} unit tercatat</Badge></div><p>{item.serials.map((serial) => <span className="serial-health" key={serial}><code>{serial}</code><PhysicalStatusBadge item={item} serial={serial} available={stockLevels[item.title] ?? item.available} maintenanceItems={maintenanceItems} liveSubmission={liveSubmission} studentSubmitted={studentSubmitted} /></span>)}</p><Button variant="ghost" icon="plus" onClick={() => addItemStock(index)}>Tambah ItemStock</Button></div></article>)}</div></>;
+  if (section === "audit") return <><div className="section-head admin-head"><div><Badge tone="purple">SUPER ADMIN PERKAP</Badge><h2>Log Aktivitas & Audit Trail</h2><p>Pembaruan database inventaris dan email otomatis dengan timestamp.</p></div><Button variant="secondary" icon="download" onClick={() => downloadText("audit-perkap.csv", "timestamp,aktor,aktivitas,status\n12 Mar 2026,System Mailer,Automated overdue email,Terkirim")}>Ekspor log</Button></div><section className="panel table-panel"><div className="table-wrap"><table><thead><tr><th>Timestamp</th><th>Aktor</th><th>Aktivitas</th><th>Modul</th><th>Target</th><th>Status</th></tr></thead><tbody>{[["12 Mar 2026 · 15:02:19", "Dina Pratiwi", "ItemStock dikarantina: In Maintenance", "Incident Log", "EPS-001"], ["12 Mar 2026 · 14:32:08", "System Mailer", "Automated overdue email terkirim", "Email Scheduler", "PJM-0134"], ["12 Mar 2026 · 14:28:41", "Rafael Santoso", "Database update: available_stock 2 → 3", "Inventory DB", "Proyektor"], ["12 Mar 2026 · 14:10:17", "Dina Pratiwi", "ItemStock dialokasikan ke peminjam", "Handover", "EPS-001"], ["12 Mar 2026 · 13:56:02", "System", "Sinkronisasi kondisi serial fisik", "ItemStock", "SND-003"]].map((row) => <tr key={row[0]}><td><b>{row[0]}</b></td><td>{row[1]}</td><td>{row[2]}</td><td><Badge tone={row[3] === "Email Scheduler" ? "purple" : "gray"}>{row[3]}</Badge></td><td><code>{row[4]}</code></td><td><Badge tone="green">Berhasil</Badge></td></tr>)}</tbody></table></div></section></>;
+  const visibleUsers = users.filter((user) => user.name.toLowerCase().includes(query.toLowerCase()) || user.id.toLowerCase().includes(query.toLowerCase()));
+  return <><div className="section-head admin-head"><div><Badge tone="purple">SUPER ADMIN PERKAP</Badge><h2>Kelola user</h2><p>Kelola akses peminjam, petugas gudang, dan administrator.</p></div><Button icon="plus" onClick={() => setShowAddUser(true)}>Tambah pengguna</Button></div><section className="panel table-panel"><div className="table-toolbar"><label className="search"><Icon name="search" size={17} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Cari nama atau ID..." /></label></div><div className="table-wrap"><table><thead><tr><th>Pengguna</th><th>ID</th><th>Peran</th><th>Fakultas / Unit</th><th>Status</th><th>Tindakan</th></tr></thead><tbody>{visibleUsers.map((user) => <tr key={user.id}><td><div className="person"><span className="avatar avatar--small">{user.name.split(" ").map((part) => part[0]).slice(0, 2).join("")}</span><strong>{user.name}</strong></div></td><td>{user.id}</td><td><Badge tone={user.role === "Super Admin" ? "red" : user.role === "Petugas Perkap" ? "purple" : "gray"}>{user.role}</Badge></td><td>{user.unit}</td><td><Badge tone={user.active ? "green" : "gray"}>{user.active ? "Aktif" : "Nonaktif"}</Badge></td><td><div className="row-actions"><Button variant="secondary" onClick={() => setUsers((current) => current.map((entry) => entry.id === user.id ? { ...entry, active: !entry.active } : entry))}>{user.active ? "Nonaktifkan" : "Aktifkan"}</Button><Button variant="danger" onClick={() => setUsers((current) => current.filter((entry) => entry.id !== user.id))}>Hapus</Button></div></td></tr>)}</tbody></table></div></section>{showAddUser && <AddUserModal onClose={() => setShowAddUser(false)} onAdd={(user) => { setUsers((current) => [...current, user]); setShowAddUser(false); }} />}</>;
+}
+
+function Dashboard({ role, onLogout, liveSubmission, onStudentSubmit, onLiveStatus, onStockChange, stockLevels = {}, studentSubmitted = false }: { role: Role; onLogout: () => void; liveSubmission: LiveSubmission; onStudentSubmit: (service: string) => void; onLiveStatus: (status: string) => void; onStockChange: (service: string, delta: number) => void; stockLevels?: Record<string, number>; studentSubmitted?: boolean }) {
+  const roleNav: Record<Role, NavItem[]> = {
+    student: [{ id: "catalog", label: "Katalog Alat", icon: "box" }, { id: "history", label: "Riwayat Peminjaman", icon: "history" }, { id: "notifications", label: "Notifikasi", icon: "bell" }],
+    staff: [{ id: "validation", label: "Validasi Peminjaman", icon: "check" }, { id: "loans", label: "Peminjaman Aktif", icon: "clock" }, { id: "scanner", label: "Scan QR / Handover", icon: "scan" }, { id: "maintenance", label: "Maintenance / Perbaikan", icon: "settings" }, { id: "inventory", label: "Stok Fisik & Seri", icon: "box" }, { id: "reports", label: "Laporan", icon: "chart" }],
+    admin: [{ id: "users", label: "Kelola User", icon: "users" }, { id: "services", label: "Master Alat Perkap", icon: "settings" }, { id: "audit", label: "Log Aktivitas & Audit Trail", icon: "history" }],
+  };
+  const [active, setActive] = useState(role === "student" ? "catalog" : role === "staff" ? "validation" : "users");
+  useEffect(() => setActive(role === "student" ? "catalog" : role === "staff" ? "validation" : "users"), [role]);
+  const [selectedService, setSelectedService] = useState(services[0].title);
+  const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [followup, setFollowup] = useState("");
+  const [showSyncToast, setShowSyncToast] = useState(false);
+  const [maintenanceItems, setMaintenanceItems] = useState<MaintenanceItem[]>([{ serial: "CAM-003", item: "Kamera Mirrorless Sony", issue: "Layar LCD retak setelah pengembalian", photo: "incident-cam003.jpg", reportedAt: "12 Mar · 09:18", status: "In Maintenance" }, { serial: "SND-004", item: "Sound System Portable", issue: "Suara kanal kanan terputus-putus", photo: "incident-snd004.jpg", reportedAt: "11 Mar · 16:40", status: "Inspection" }]);
+  const resolveMaintenance = (serial: string) => {
+    const resolved = maintenanceItems.find((item) => item.serial === serial);
+    if (!resolved) return;
+    setMaintenanceItems((current) => current.filter((item) => item.serial !== serial));
+    if (liveSubmission.status === "In Maintenance" && resolved.item === liveSubmission.service) onLiveStatus("Dikembalikan");
+    else onStockChange(resolved.item, 1);
+  };
+  const titles: Record<string, string> = { catalog: "Katalog Alat", request: "Ajukan Peminjaman", history: "Riwayat Peminjaman", tracking: "Status #PJM-2026-0142", notifications: "Notifikasi", validation: "Validasi Peminjaman", loans: "Peminjaman Aktif & Overdue", scanner: "Scan QR / Handover", maintenance: "Maintenance / Perbaikan", inventory: "Stok Fisik & Seri", reports: "Laporan Perkap", users: "Kelola User", services: "Master Alat Perkap", audit: "Log Aktivitas & Audit Trail" };
+  const navigate = (id: string) => { setActive(id); setMobileOpen(false); };
+  const studentContent = active === "request" ? <StudentRequestForm service={selectedService} onBack={() => setActive("catalog")} onSubmit={() => { onStudentSubmit(selectedService); setShowSyncToast(true); setActive("tracking"); }} /> : active === "tracking" ? <StudentTracking liveSubmitted={studentSubmitted} liveStatus={liveSubmission.status} service={studentSubmitted ? liveSubmission.service : services[0].title} onBack={() => setActive("history")} /> : active === "history" ? <StudentHistory liveSubmission={liveSubmission} studentSubmitted={studentSubmitted} onView={() => setActive("tracking")} /> : active === "notifications" ? <StudentNotifications /> : <StudentCatalog stockLevels={stockLevels} onApply={(service) => { setSelectedService(service); setActive("request"); }} />;
+  const staffContent = active === "loans" ? <ActiveLoans onFollowup={setFollowup} /> : active === "scanner" ? <QRScanner service={liveSubmission.service} onLoanStatus={onLiveStatus} onMaintenanceAdd={(item) => setMaintenanceItems((current) => current.some((entry) => entry.serial === item.serial) ? current : [item, ...current])} /> : active === "maintenance" ? <MaintenancePanel items={maintenanceItems} onUpdate={(serial, status) => setMaintenanceItems((current) => current.map((item) => item.serial === serial ? { ...item, status } : item))} onResolve={resolveMaintenance} /> : active === "inventory" ? <InventoryStock stockLevels={stockLevels} maintenanceItems={maintenanceItems} liveSubmission={liveSubmission} studentSubmitted={studentSubmitted} /> : active === "reports" ? <Reports /> : <StaffValidation liveSubmission={liveSubmission} onLiveStatus={onLiveStatus} />;
+  return <div className={`app-shell ${mobileOpen ? "mobile-open" : ""}`}><Sidebar role={role} active={active} items={roleNav[role]} collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} onSelect={navigate} onLogout={onLogout} /><button className="mobile-overlay" onClick={() => setMobileOpen(false)} aria-label="Tutup navigasi" /><div className="app-main"><Header eyebrow={`PERKAP / ${roleLabels[role]}`} title={titles[active]} initials={role === "student" ? "AS" : role === "staff" ? "DP" : "SA"} onMenu={() => setMobileOpen(true)} onHelp={() => { window.location.href = "mailto:perkap@unika.ac.id?subject=Bantuan Portal Perkap"; }} onNotification={() => role === "student" ? setActive("notifications") : window.alert("Tidak ada notifikasi operasional baru.")} /><main className="content">{role === "student" ? studentContent : role === "staff" ? staffContent : <AdminConsole section={active} stockLevels={stockLevels} onStockChange={onStockChange} maintenanceItems={maintenanceItems} liveSubmission={liveSubmission} studentSubmitted={studentSubmitted} />}</main></div>{showSyncToast && <section className="sync-toast" role="status"><div className="sync-toast__icon"><Icon name="check" /></div><div><strong>Pengajuan Berhasil Dikirim & Disinkronkan ke Petugas!</strong><span>Stok telah direservasi dan status diperbarui secara real-time.</span></div><button onClick={() => setShowSyncToast(false)} aria-label="Tutup notifikasi"><Icon name="close" size={18} /></button><i /></section>}{followup && <FollowupModal email={followup} onClose={() => setFollowup("")} />}</div>;
+}
+
+export default function App() {
+  const [role, setRole] = useState<Role | null>(null);
+  const [liveSubmission, setLiveSubmission] = useState<LiveSubmission>(defaultLiveSubmission);
+  const [studentSubmitted, setStudentSubmitted] = useState(false);
+  const [stockLevels, setStockLevels] = useState<Record<string, number>>(() => Object.fromEntries(services.map((service) => [service.title, service.available])));
+  const adjustStock = (service: string, delta: number) => {
+    const item = services.find((entry) => entry.title === service);
+    setStockLevels((current) => ({ ...current, [service]: Math.min(item?.total ?? Number.MAX_SAFE_INTEGER, Math.max(0, (current[service] ?? item?.available ?? 0) + delta)) }));
+  };
+  const visibleLiveSubmission = liveSubmission.id === "LIVE-PJM-001" ? { ...liveSubmission, service: "Sound System Portable" } : liveSubmission;
+  const submitStudentRequest = (service: string) => {
+    setLiveSubmission({ id: `PJM-${Date.now().toString().slice(-6)}`, email: "mahasiswa.test@unika.ac.id", service, file: "Surat Permohonan Peminjaman.pdf", submittedAt: new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }), status: "Pending Review" });
+    setStudentSubmitted(true);
+    setStockLevels((current) => {
+      const safeCurrent = current ?? Object.fromEntries(services.map((item) => [item.title, item.available]));
+      return { ...safeCurrent, [service]: Math.max(0, (safeCurrent[service] ?? services.find((item) => item.title === service)?.available ?? 0) - 1) };
+    });
+  };
+  const changeLiveStatus = (status: string) => {
+    const unavailableStatuses = ["Pending Review", "Disetujui", "Dipinjam", "In Maintenance"];
+    if (studentSubmitted) {
+      const wasUnavailable = unavailableStatuses.includes(liveSubmission.status);
+      const willBeUnavailable = unavailableStatuses.includes(status);
+      if (wasUnavailable !== willBeUnavailable) adjustStock(liveSubmission.service, willBeUnavailable ? -1 : 1);
+    }
+    setLiveSubmission((current) => ({ ...current, status }));
+  };
+  return role ? <Dashboard role={role} onLogout={() => setRole(null)} liveSubmission={visibleLiveSubmission} onStudentSubmit={submitStudentRequest} onLiveStatus={changeLiveStatus} onStockChange={adjustStock} stockLevels={stockLevels} studentSubmitted={studentSubmitted} /> : <Login onLogin={setRole} />;
+}
