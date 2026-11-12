@@ -73,7 +73,7 @@ const handleGoogleSuccess = async (credentialResponse: any) => {
       const res = await fetch('https://perkap-backend.vercel.app/api/auth/google', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ credential: credentialResponse.credential }) // Diubah dari 'token' menjadi 'credential'
+        body: JSON.stringify({ token: credentialResponse.credential }) // Kembalikan ke 'token'
       });
       const data = await res.json();
       
