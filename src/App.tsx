@@ -67,13 +67,13 @@ const roleLabels: Record<Role, string> = { student: "Mahasiswa", staff: "Petugas
 function Login({ onLogin }: { onLogin: (role: Role, email: string) => void }) {
   const [errorMsg, setErrorMsg] = useState("");
 
-  const handleGoogleSuccess = async (credentialResponse: any) => {
+const handleGoogleSuccess = async (credentialResponse: any) => {
     try {
       setErrorMsg("");
       const res = await fetch('https://perkap-backend.vercel.app/api/auth/google', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: credentialResponse.credential })
+        body: JSON.stringify({ credential: credentialResponse.credential }) // Diubah dari 'token' menjadi 'credential'
       });
       const data = await res.json();
       
