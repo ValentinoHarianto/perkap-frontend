@@ -111,7 +111,9 @@ const handleGoogleSuccess = async (credentialResponse: any) => {
           <GoogleLogin
             onSuccess={handleGoogleSuccess}
             onError={() => setErrorMsg('Otentikasi Google gagal.')}
-            useOneTap shape="pill" width="100%"
+            shape="pill" 
+            width="100%"
+            use_fedcm_for_prompt={false}
           />
         </div>
 
