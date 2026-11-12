@@ -70,7 +70,7 @@ function Login({ onLogin }: { onLogin: (role: Role, email: string) => void }) {
   const handleGoogleSuccess = async (credentialResponse: any) => {
     try {
       setErrorMsg("");
-      const res = await fetch('http://localhost:5000/api/auth/google', {
+      const res = await fetch('https://perkap-backend.vercel.app/api/auth/google', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: credentialResponse.credential })
@@ -417,14 +417,14 @@ export default function App() {
 
   useEffect(() => {
     if (role) {
-      fetch('http://localhost:5000/api/services').then(res => res.json()).then(data => setServices(data)).catch(() => {});
-      fetch('http://localhost:5000/api/borrowings').then(res => res.json()).then(data => setBorrowings(data)).catch(() => {});
+      fetch('https://perkap-backend.vercel.app/api/services').then(res => res.json()).then(data => setServices(data)).catch(() => {});
+      fetch('https://perkap-backend.vercel.app/api/borrowings').then(res => res.json()).then(data => setBorrowings(data)).catch(() => {});
     }
   }, [role]);
 
   const handleStudentSubmit = async (service: string, purpose: string, file: File, borrowDate: string) => {
     try {
-      const res = await fetch('http://localhost:5000/api/borrow', {
+      const res = await fetch('https://perkap-backend.vercel.app/api/borrow', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: userEmail, service, purpose, borrowDate })
@@ -439,7 +439,7 @@ export default function App() {
 
   const handleUpdateStatus = async (id: string, status: string) => {
     try {
-      await fetch(`http://localhost:5000/api/borrowings/${id}/status`, {
+      await fetch(`https://perkap-backend.vercel.app/api/borrowings/${id}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status })
