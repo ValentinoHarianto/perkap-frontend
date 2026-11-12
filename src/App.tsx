@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useState } from "react";
-import { GoogleLogin } from "@react-oauth/google";
+import { GoogleLogin, useGoogleLogin } from "@react-oauth/google";
 
 type Role = "student" | "staff" | "admin";
 type IconName =
