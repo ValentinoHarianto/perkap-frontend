@@ -66,7 +66,6 @@ const roleLabels: Record<Role, string> = { student: "Mahasiswa", staff: "Petugas
 function Login({ onLogin }: { onLogin: (role: Role, email: string) => void }) {
   const [errorMsg, setErrorMsg] = useState("");
 
-  // Menggunakan Redirect Auth URL murni ke Google untuk menghindari masalah COOP/Popup blocker di Vercel
   const handleGoogleRedirectLogin = () => {
     const clientId = "526565725097-uhj6ubjrgtvtlc0i07beoqip2blr4i1q.apps.googleusercontent.com";
     const redirectUri = window.location.origin;
@@ -107,7 +106,7 @@ function Login({ onLogin }: { onLogin: (role: Role, email: string) => void }) {
       } else {
         setErrorMsg(data.message || "Login gagal. Gunakan email kampus.");
       }
-    } catch (err) {
+    } catch (_err) {
       setErrorMsg("Gagal terhubung ke server backend.");
     }
   };
@@ -430,7 +429,7 @@ function Dashboard({ role, userEmail, onLogout, services, borrowings, onStudentS
   const titles: Record<string, string> = { catalog: "Katalog Alat", request: "Ajukan Peminjaman", history: "Riwayat Peminjaman", notifications: "Notifikasi", validation: "Validasi Peminjaman", loans: "Peminjaman Aktif", scanner: "Scan QR", inventory: "Stok Fisik", services: "Master Alat Perkap", audit: "Log Aktivitas" };
   const navigate = (id: string) => { setActive(id); setMobileOpen(false); };
 
-  const studentContent = active === "request" ? <StudentRequestForm service={selectedService} onBack={() => setActive("catalog")} onSubmit={(purpose: string, file: File, borrowDate: string) => { onStudentSubmit(selectedService, purpose, file, borrowDate); setShowSyncToast(true); setActive("history"); }} /> : active === "history" ? <StudentHistory borrowings={borrowings.filter((b: any) => b.email === userEmail)} /> : active === "notifications" ? <StudentNotifications /> : <StudentCatalog services={services} stockLevels={stockLevels} onApply={(s: string) => { setSelectedService(s); setActive("request"); }} />;
+  const studentContent = active === "request" ? <StudentRequestForm service={selectedService} onBack={() => setActive("catalog")} onSubmit={(purpose: string, _file: File, borrowDate: string) => { onStudentSubmit(selectedService, purpose, _file, borrowDate); setShowSyncToast(true); setActive("history"); }} /> : active === "history" ? <StudentHistory borrowings={borrowings.filter((b: any) => b.email === userEmail)} /> : active === "notifications" ? <StudentNotifications /> : <StudentCatalog services={services} stockLevels={stockLevels} onApply={(s: string) => { setSelectedService(s); setActive("request"); }} />;
 
   return (
     <div className={`app-shell ${mobileOpen ? "mobile-open" : ""}`}>
@@ -463,7 +462,7 @@ export default function App() {
     }
   }, [role]);
 
-  const handleStudentSubmit = async (service: string, purpose: string, file: File, borrowDate: string) => {
+  const handleStudentSubmit = async (service: string, purpose: string, _file: File, borrowDate: string) => {
     try {
       const res = await fetch('https://perkap-backend.vercel.app/api/borrow', {
         method: 'POST',
@@ -475,7 +474,7 @@ export default function App() {
         setBorrowings((prev: any[]) => [...prev, { id: data.id, email: userEmail, service, borrowDate, status: data.status, submittedAt: data.submittedAt }]);
         setStockLevels(prev => ({ ...prev, [service]: (prev[service] ?? 2) - 1 }));
       }
-    } catch (err) { console.error(err); }
+    } catch (_err) { /* ignore error */ }
   };
 
   const handleUpdateStatus = async (id: string, status: string) => {
@@ -486,7 +485,7 @@ export default function App() {
         body: JSON.stringify({ status })
       });
       setBorrowings((prev: any[]) => prev.map((b: any) => b.id === id ? { ...b, status } : b));
-    } catch (err) { console.error(err); }
+    } catch (_err) { /* ignore error */ }
   };
 
   return role ? (
