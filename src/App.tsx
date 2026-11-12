@@ -1,5 +1,4 @@
 import { ReactNode, useEffect, useState } from "react";
-import { useGoogleLogin } from "@react-oauth/google";
 
 type Role = "student" | "staff" | "admin";
 type IconName =
@@ -67,33 +66,51 @@ const roleLabels: Record<Role, string> = { student: "Mahasiswa", staff: "Petugas
 function Login({ onLogin }: { onLogin: (role: Role, email: string) => void }) {
   const [errorMsg, setErrorMsg] = useState("");
 
-  const login = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      try {
-        setErrorMsg("");
-        const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
-        });
-        const userInfo = await userInfoRes.json();
+  // Menggunakan Redirect Auth URL murni ke Google untuk menghindari masalah COOP/Popup blocker di Vercel
+  const handleGoogleRedirectLogin = () => {
+    const clientId = "526565725097-uhj6ubjrgtvtlc0i07beoqip2blr4i1q.apps.googleusercontent.com";
+    const redirectUri = window.location.origin;
+    const scope = "email profile openid";
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=${encodeURIComponent(scope)}`;
+    window.location.href = authUrl;
+  };
 
-        const res = await fetch('https://perkap-backend.vercel.app/api/auth/google', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: tokenResponse.access_token, email: userInfo.email, name: userInfo.name })
-        });
-        const data = await res.json();
-        
-        if (res.ok && data.success) {
-          onLogin(data.role, data.email);
-        } else {
-          setErrorMsg(data.message || "Login gagal. Gunakan email kampus.");
-        }
-      } catch (err) {
-        setErrorMsg("Gagal terhubung ke server backend.");
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash && hash.includes("access_token")) {
+      const params = new URLSearchParams(hash.substring(1));
+      const accessToken = params.get("access_token");
+      if (accessToken) {
+        verifyTokenWithBackend(accessToken);
       }
-    },
-    onError: () => setErrorMsg('Otentikasi Google gagal.'),
-  });
+    }
+  }, []);
+
+  const verifyTokenWithBackend = async (accessToken: string) => {
+    try {
+      setErrorMsg("");
+      const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const userInfo = await userInfoRes.json();
+
+      const res = await fetch('https://perkap-backend.vercel.app/api/auth/google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: accessToken, email: userInfo.email, name: userInfo.name })
+      });
+      const data = await res.json();
+      
+      if (res.ok && data.success) {
+        window.history.replaceState({}, document.title, window.location.pathname);
+        onLogin(data.role, data.email);
+      } else {
+        setErrorMsg(data.message || "Login gagal. Gunakan email kampus.");
+      }
+    } catch (err) {
+      setErrorMsg("Gagal terhubung ke server backend.");
+    }
+  };
 
   return (
     <main className="login">
@@ -117,7 +134,7 @@ function Login({ onLogin }: { onLogin: (role: Role, email: string) => void }) {
 
         <div style={{ display: 'flex', justifyContent: 'center', margin: '1.5rem 0', width: '100%' }}>
           <button 
-            onClick={() => login()} 
+            onClick={handleGoogleRedirectLogin} 
             style={{ 
               display: 'flex', 
               alignItems: 'center', 
