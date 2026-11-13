@@ -1,5 +1,4 @@
 import { FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
-import "./extra.css";
 
 /* ============================== TYPES ============================== */
 type Role = "student" | "staff" | "admin";
